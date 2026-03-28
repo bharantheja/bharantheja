@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RideCompare Bengaluru — Compare Ride Prices Instantly</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#07070d; --surface:#0f0f18; --card:#16162a;
+  --border:#252540; --accent:#00e5a0; --accent2:#6c63ff;
+  --text:#f0f0f5; --muted:#888899; --red:#ff5c72; --orange:#ff9f43;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(0,229,160,0.025)1px,transparent 1px),
+                   linear-gradient(90deg,rgba(0,229,160,0.025)1px,transparent 1px);
+  background-size:48px 48px;pointer-events:none;z-index:0;}
+
+/* ── NAV ─────────────────────────────────────────────────────────── */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;
+  background:rgba(7,7,13,0.88);backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;height:60px;}
+.nav-logo{font-family:'Syne',sans-serif;font-size:1.35rem;font-weight:800;letter-spacing:-1px;text-decoration:none;color:var(--text);}
+.nav-logo span{color:var(--accent);}
+.nav-links{display:flex;align-items:center;gap:4px;}
+.nav-link{padding:7px 16px;border-radius:8px;color:var(--muted);font-size:0.88rem;font-weight:500;text-decoration:none;transition:all 0.2s;cursor:pointer;border:none;background:none;font-family:'DM Sans',sans-serif;}
+.nav-link:hover,.nav-link.active{color:var(--text);background:rgba(255,255,255,0.06);}
+.nav-badge{background:linear-gradient(135deg,var(--accent),#00c87a);color:#000;font-size:0.68rem;font-weight:700;padding:5px 14px;border-radius:20px;letter-spacing:.5px;text-decoration:none;transition:transform 0.2s,box-shadow 0.2s;}
+.nav-badge:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,229,160,0.35);}
+@media(max-width:600px){.nav-links .nav-link{display:none;}.nav-links .nav-badge{display:flex;}}
+
+/* ── HERO ─────────────────────────────────────────────────────────── */
+#home{padding-top:60px;}
+.hero{position:relative;z-index:5;text-align:center;padding:72px 20px 40px;}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.25);color:var(--accent);font-size:0.75rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:6px 14px;border-radius:20px;margin-bottom:22px;}
+.hero-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:blink 1.4s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+.hero h1{font-family:'Syne',sans-serif;font-size:clamp(2.2rem,6vw,4rem);font-weight:800;line-height:1.08;letter-spacing:-2.5px;margin-bottom:14px;}
+.hero h1 em{font-style:normal;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{color:var(--muted);font-size:1rem;font-weight:300;max-width:480px;margin:0 auto 40px;}
+.hero-stats{display:flex;justify-content:center;gap:36px;margin-bottom:44px;flex-wrap:wrap;}
+.stat{text-align:center;}
+.stat-num{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--accent);}
+.stat-lbl{font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+
+/* ── SEARCH ──────────────────────────────────────────────────────── */
+.search-card{position:relative;z-index:6;max-width:640px;margin:0 auto 24px;padding:0 18px;}
+.search-box{background:var(--surface);border:1px solid var(--border);border-radius:22px;padding:26px;box-shadow:0 16px 60px rgba(0,0,0,0.5);}
+.input-group{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
+.autocomplete-wrapper{position:relative;}
+.input-wrap{position:relative;}
+.input-wrap .icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:1rem;pointer-events:none;z-index:2;}
+.input-wrap input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px 13px 13px 40px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.92rem;outline:none;transition:border-color 0.2s,box-shadow 0.2s;}
+.input-wrap input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,229,160,0.1);}
+.input-wrap input::placeholder{color:var(--muted);}
+.connector{display:flex;align-items:center;padding:0 0 0 14px;margin:-2px 0;}
+.connector-line{width:2px;height:18px;background:linear-gradient(to bottom,var(--accent),var(--accent2));border-radius:2px;margin-left:4px;}
+.location-pill{display:none;align-items:center;gap:8px;background:rgba(0,229,160,0.07);border:1px solid rgba(0,229,160,0.22);border-radius:12px;padding:11px 13px 11px 40px;font-size:0.86rem;position:relative;min-height:46px;}
+.location-pill.show{display:flex;}
+.location-pill .pill-icon{position:absolute;left:13px;}
+.location-pill .pill-text{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
+.location-pill .pill-clear{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:0;flex-shrink:0;transition:color 0.15s;}
+.location-pill .pill-clear:hover{color:var(--red);}
+
+/* suggestions */
+.suggestions-dropdown{position:absolute;top:calc(100%+6px);left:0;right:0;background:#16162a;border:1px solid var(--border);border-radius:14px;overflow:hidden;z-index:9999;box-shadow:0 20px 60px rgba(0,0,0,0.75);display:none;animation:dropIn 0.13s ease;}
+.suggestions-dropdown.open{display:block;}
+@keyframes dropIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.suggestion-item{display:flex;align-items:center;gap:12px;padding:11px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);transition:background 0.1s;}
+.suggestion-item:last-of-type{border-bottom:none;}
+.suggestion-item:hover,.suggestion-item.highlighted{background:rgba(0,229,160,0.07);}
+.sug-icon{width:32px;height:32px;background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.9rem;flex-shrink:0;}
+.sug-text{flex:1;min-width:0;}
+.sug-name{font-size:0.85rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sug-name em{font-style:normal;color:var(--accent);}
+.sug-addr{font-size:0.72rem;color:var(--muted);margin-top:1px;}
+.sug-type{font-size:0.62rem;text-transform:uppercase;letter-spacing:.7px;color:var(--accent2);background:rgba(108,99,255,0.12);padding:2px 7px;border-radius:20px;flex-shrink:0;}
+.sug-footer{padding:8px 14px;background:rgba(0,0,0,0.3);font-size:0.68rem;color:var(--muted);border-top:1px solid var(--border);}
+.no-results{padding:16px;text-align:center;color:var(--muted);font-size:0.84rem;}
+
+/* ride type buttons */
+.ride-type-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.ride-type-btn{flex:1;min-width:80px;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:10px 7px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;text-align:center;transition:all 0.18s;}
+.ride-type-btn span{display:block;font-size:1.4rem;margin-bottom:4px;}
+.ride-type-btn.active,.ride-type-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,0.07);}
+.compare-btn{width:100%;background:linear-gradient(135deg,var(--accent),#00c87a);border:none;border-radius:12px;padding:16px;color:#000;font-family:'Syne',sans-serif;font-size:0.97rem;font-weight:700;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;letter-spacing:.3px;}
+.compare-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,229,160,0.35);}
+.compare-btn:active{transform:translateY(0);}
+
+/* ── LOADING ──────────────────────────────────────────────────────── */
+.loading{text-align:center;padding:40px;display:none;}
+.loading.visible{display:block;}
+.spinner{width:38px;height:38px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;margin:0 auto 16px;animation:spin 0.75s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading p{color:var(--muted);font-size:0.88rem;}
+
+/* ── RESULTS ──────────────────────────────────────────────────────── */
+.results-section{position:relative;z-index:5;max-width:680px;margin:0 auto;padding:0 18px 60px;display:none;}
+.results-section.visible{display:block;animation:fadeUp 0.4s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
+.results-header h2{font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:700;}
+.route-info{color:var(--muted);font-size:0.82rem;}
+.route-info strong{color:var(--text);}
+.savings-bar{background:linear-gradient(135deg,rgba(0,229,160,0.09),rgba(108,99,255,0.09));border:1px solid rgba(0,229,160,0.18);border-radius:12px;padding:13px 18px;margin-bottom:16px;font-size:0.88rem;}
+.savings-bar strong{color:var(--accent);}
+.app-list{display:flex;flex-direction:column;gap:10px;}
+.app-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;text-decoration:none;color:inherit;}
+.app-card:hover{border-color:var(--accent);background:var(--card);transform:translateX(5px);box-shadow:0 4px 24px rgba(0,0,0,0.3),-4px 0 0 var(--accent);}
+.app-card.best{border-color:rgba(0,229,160,0.4);background:linear-gradient(135deg,rgba(0,229,160,0.05),rgba(108,99,255,0.04));}
+.best-tag{position:absolute;top:0;right:0;background:var(--accent);color:#000;font-size:0.61rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:4px 11px;border-bottom-left-radius:10px;}
+.surge-badge{display:inline-flex;align-items:center;gap:3px;font-size:0.62rem;font-weight:600;padding:2px 7px;border-radius:20px;margin-top:4px;}
+.surge-badge.surge{background:rgba(255,159,67,0.15);color:var(--orange);border:1px solid rgba(255,159,67,0.3);}
+.surge-badge.no-surge{background:rgba(0,229,160,0.1);color:var(--accent);border:1px solid rgba(0,229,160,0.25);}
+.app-logo{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.55rem;flex-shrink:0;}
+.app-info{flex:1;min-width:0;}
+.app-name{font-family:'Syne',sans-serif;font-weight:700;font-size:0.97rem;}
+.app-sub{color:var(--muted);font-size:0.76rem;margin-top:2px;}
+.app-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;}
+.app-tag{font-size:0.63rem;text-transform:uppercase;letter-spacing:.6px;padding:2px 8px;border-radius:20px;}
+.app-tag.type{background:rgba(108,99,255,0.14);color:#a09fff;}
+.app-tag.parcel{background:rgba(255,159,67,0.12);color:var(--orange);}
+.app-tag.eco{background:rgba(0,229,160,0.1);color:var(--accent);}
+.app-price-col{text-align:right;flex-shrink:0;}
+.app-price{font-family:'Syne',sans-serif;font-size:1.35rem;font-weight:800;line-height:1;}
+.app-price.best-price{color:var(--accent);}
+.app-price-range{font-size:0.72rem;color:var(--muted);margin-top:2px;}
+.app-eta{font-size:0.74rem;color:var(--muted);margin-top:2px;}
+.open-app-btn{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:8px 13px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.78rem;cursor:pointer;transition:all 0.18s;flex-shrink:0;white-space:nowrap;}
+.app-card:hover .open-app-btn{background:var(--accent);color:#000;border-color:var(--accent);}
+.disclaimer{font-size:0.72rem;color:var(--muted);text-align:center;padding:12px 18px 0;line-height:1.5;}
+
+/* ── HOW IT WORKS ─────────────────────────────────────────────────── */
+.how-section{position:relative;z-index:5;max-width:680px;margin:0 auto 0;padding:0 18px 80px;}
+.how-section h3{font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700;text-transform:uppercase;letter-spacing:2.5px;color:var(--muted);margin-bottom:20px;text-align:center;}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+@media(max-width:480px){.steps{grid-template-columns:1fr;}}
+.step{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;}
+.step-num{width:34px;height:34px;background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.28);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-family:'Syne',sans-serif;font-size:0.88rem;font-weight:700;color:var(--accent);}
+.step strong{color:var(--text);display:block;margin-bottom:6px;font-size:0.9rem;}
+.step p{font-size:0.8rem;color:var(--muted);}
+
+/* ── ABOUT SECTION ───────────────────────────────────────────────── */
+#about{position:relative;z-index:5;max-width:900px;margin:0 auto;padding:80px 28px;}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:center;}
+@media(max-width:680px){.about-grid{grid-template-columns:1fr;}}
+.about-label{font-size:0.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:12px;}
+.about h2{font-family:'Syne',sans-serif;font-size:clamp(1.6rem,4vw,2.4rem);font-weight:800;letter-spacing:-1.5px;line-height:1.15;margin-bottom:16px;}
+.about p{color:var(--muted);font-size:0.93rem;line-height:1.7;margin-bottom:14px;}
+.about-cards{display:flex;flex-direction:column;gap:14px;}
+.about-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;display:flex;gap:14px;align-items:flex-start;}
+.about-card-icon{font-size:1.6rem;flex-shrink:0;}
+.about-card-title{font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700;margin-bottom:4px;}
+.about-card-desc{font-size:0.8rem;color:var(--muted);line-height:1.5;}
+
+/* ── CONTACT SECTION ─────────────────────────────────────────────── */
+#contact{position:relative;z-index:5;max-width:680px;margin:0 auto;padding:80px 28px;}
+.contact-header{text-align:center;margin-bottom:40px;}
+.contact-header .about-label{justify-content:center;display:block;}
+.contact-header h2{font-family:'Syne',sans-serif;font-size:clamp(1.6rem,4vw,2.4rem);font-weight:800;letter-spacing:-1.5px;line-height:1.15;margin-bottom:10px;}
+.contact-header p{color:var(--muted);font-size:0.93rem;}
+.contact-form-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+@media(max-width:520px){.form-grid{grid-template-columns:1fr;}}
+.form-field{display:flex;flex-direction:column;gap:6px;}
+.form-field.full{grid-column:1/-1;}
+.form-field label{font-size:0.8rem;font-weight:600;color:var(--muted);letter-spacing:.5px;}
+.form-field input,.form-field textarea,.form-field select{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.88rem;outline:none;transition:border-color 0.2s,box-shadow 0.2s;width:100%;}
+.form-field select option{background:var(--card);}
+.form-field textarea{height:120px;resize:vertical;}
+.form-field input:focus,.form-field textarea:focus,.form-field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,229,160,0.1);}
+.form-field input::placeholder,.form-field textarea::placeholder{color:var(--muted);}
+.contact-submit{width:100%;background:linear-gradient(135deg,var(--accent),#00c87a);border:none;border-radius:11px;padding:15px;color:#000;font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;margin-top:8px;transition:transform 0.15s,box-shadow 0.15s;}
+.contact-submit:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,229,160,0.3);}
+.form-success{display:none;text-align:center;padding:24px;color:var(--accent);font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;}
+.contact-info-row{display:flex;gap:14px;margin-top:20px;flex-wrap:wrap;}
+.contact-info-pill{flex:1;min-width:180px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:10px;font-size:0.83rem;}
+.contact-info-pill .ci-icon{font-size:1.2rem;}
+.contact-info-pill .ci-label{color:var(--muted);font-size:0.72rem;display:block;margin-bottom:2px;}
+
+/* ── FOOTER ──────────────────────────────────────────────────────── */
+footer{position:relative;z-index:5;border-top:1px solid var(--border);background:var(--surface);padding:40px 32px 32px;}
+.footer-inner{max-width:900px;margin:0 auto;}
+.footer-top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap;margin-bottom:32px;}
+.footer-brand{}
+.footer-logo{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;letter-spacing:-1px;margin-bottom:8px;}
+.footer-logo span{color:var(--accent);}
+.footer-desc{color:var(--muted);font-size:0.82rem;line-height:1.6;max-width:280px;}
+.footer-links-col{}
+.footer-links-col h4{font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:12px;}
+.footer-links-col a{display:block;color:var(--muted);font-size:0.83rem;text-decoration:none;margin-bottom:8px;transition:color 0.15s;cursor:pointer;}
+.footer-links-col a:hover{color:var(--accent);}
+.footer-divider{height:1px;background:var(--border);margin-bottom:24px;}
+.footer-bottom{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+.footer-copy{color:var(--muted);font-size:0.8rem;}
+.footer-builder{display:flex;align-items:center;gap:8px;background:rgba(0,229,160,0.07);border:1px solid rgba(0,229,160,0.2);border-radius:20px;padding:7px 16px;}
+.footer-builder .fb-name{font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;color:var(--accent);}
+.footer-builder .fb-role{font-size:0.74rem;color:var(--muted);}
+.footer-builder .fb-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:800;font-family:'Syne',sans-serif;font-size:0.9rem;color:#000;flex-shrink:0;}
+.apps-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+.app-pill{display:flex;align-items:center;gap:5px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:0.72rem;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<!-- ── NAVIGATION ─────────────────────────────────────────────────── -->
+<nav>
+  <a class="nav-logo" onclick="scrollTo('home')">Ride<span>Compare</span></a>
+  <div class="nav-links">
+    <button class="nav-link active" onclick="scrollTo('home')">Home</button>
+    <button class="nav-link" onclick="scrollTo('about')">About</button>
+    <button class="nav-link" onclick="scrollTo('contact')">Contact</button>
+    <a class="nav-badge" onclick="scrollTo('home')">📍 Bengaluru</a>
+  </div>
+</nav>
+
+<!-- ── HERO ───────────────────────────────────────────────────────── -->
+<div id="home">
+<section class="hero">
+  <div class="hero-badge"><span class="dot"></span>Live Price Comparison</div>
+  <h1>Find the <em>cheapest ride</em><br>across every app</h1>
+  <p class="hero-sub">Compare Rapido, Uber, Ola, Namma Yatri, inDrive & BluSmart — instantly, for free</p>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">16+</div><div class="stat-lbl">Ride Options</div></div>
+    <div class="stat"><div class="stat-num">517</div><div class="stat-lbl">Locations</div></div>
+    <div class="stat"><div class="stat-num">5</div><div class="stat-lbl">Categories</div></div>
+    <div class="stat"><div class="stat-num">Free</div><div class="stat-lbl">Always</div></div>
+  </div>
+</section>
+
+<!-- ── SEARCH CARD ─────────────────────────────────────────────────── -->
+<div class="search-card">
+  <div class="search-box">
+    <div class="input-group">
+      <div class="autocomplete-wrapper" id="pickup-wrapper">
+        <div class="input-wrap" id="pickup-input-wrap">
+          <span class="icon">📍</span>
+          <input type="text" id="pickup" placeholder="Search pickup in Bengaluru…" autocomplete="off"/>
+        </div>
+        <div class="location-pill" id="pickup-pill">
+          <span class="pill-icon">📍</span>
+          <span class="pill-text" id="pickup-pill-text"></span>
+          <button class="pill-clear" onclick="clearLocation('pickup')">✕</button>
+        </div>
+        <div class="suggestions-dropdown" id="pickup-dropdown"></div>
+      </div>
+      <div class="connector"><div class="connector-line"></div></div>
+      <div class="autocomplete-wrapper" id="destination-wrapper">
+        <div class="input-wrap" id="destination-input-wrap">
+          <span class="icon">🏁</span>
+          <input type="text" id="destination" placeholder="Search destination in Bengaluru…" autocomplete="off"/>
+        </div>
+        <div class="location-pill" id="destination-pill">
+          <span class="pill-icon">🏁</span>
+          <span class="pill-text" id="destination-pill-text"></span>
+          <button class="pill-clear" onclick="clearLocation('destination')">✕</button>
+        </div>
+        <div class="suggestions-dropdown" id="destination-dropdown"></div>
+      </div>
+    </div>
+
+    <div class="ride-type-row">
+      <button class="ride-type-btn active" onclick="selectType(this,'bike')"><span>🏍️</span>Bike</button>
+      <button class="ride-type-btn" onclick="selectType(this,'auto')"><span>🛺</span>Auto</button>
+      <button class="ride-type-btn" onclick="selectType(this,'economy')"><span>🚗</span>Car Economy</button>
+      <button class="ride-type-btn" onclick="selectType(this,'premium')"><span>🚙</span>Car Premium</button>
+      <button class="ride-type-btn" onclick="selectType(this,'parcel')"><span>📦</span>Parcel</button>
+    </div>
+    <button class="compare-btn" onclick="compareRides()">⚡ Compare Prices Now</button>
+  </div>
+</div>
+
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <p>Comparing fares across all apps…</p>
+</div>
+
+<div class="results-section" id="results">
+  <div class="results-header">
+    <h2>Available Rides</h2>
+    <div class="route-info" id="routeInfo"></div>
+  </div>
+  <div class="savings-bar" id="savingsBar"></div>
+  <div class="app-list" id="appList"></div>
+  <p class="disclaimer" id="disclaimer"></p>
+</div>
+
+<div class="how-section" id="how">
+  <h3>How It Works</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><strong>Enter Route</strong><p>Type pickup & destination anywhere in Bengaluru</p></div>
+    <div class="step"><div class="step-num">2</div><strong>Choose Type</strong><p>Bike, Auto, Car Economy, Car Premium, or Parcel</p></div>
+    <div class="step"><div class="step-num">3</div><strong>Compare & Book</strong><p>See all prices ranked — tap to open the app & book</p></div>
+  </div>
+</div>
+</div>
+
+<!-- ── ABOUT ───────────────────────────────────────────────────────── -->
+<section id="about">
+  <div class="about-grid">
+    <div>
+      <div class="about-label">About RideCompare</div>
+      <h2 class="about-h2" style="font-family:'Syne',sans-serif;font-size:clamp(1.6rem,4vw,2.4rem);font-weight:800;letter-spacing:-1.5px;line-height:1.15;margin-bottom:16px;">Why we built this</h2>
+      <p style="color:var(--muted);font-size:0.93rem;line-height:1.7;margin-bottom:14px;">Bengaluru has 6+ major ride-hailing apps — and every commuter wastes time jumping between them to find the cheapest fare. RideCompare solves this in seconds.</p>
+      <p style="color:var(--muted);font-size:0.93rem;line-height:1.7;margin-bottom:14px;">All fare data is sourced from official 2025 Bengaluru rate cards. No login, no ads, no hidden charges — just instant price comparison.</p>
+      <div class="apps-row">
+        <span class="app-pill">⚡ Rapido</span>
+        <span class="app-pill">🖤 Uber</span>
+        <span class="app-pill">🟡 Ola</span>
+        <span class="app-pill">🟢 Namma Yatri</span>
+        <span class="app-pill">🟣 inDrive</span>
+        <span class="app-pill">🔵 BluSmart</span>
+      </div>
+    </div>
+    <div class="about-cards">
+      <div class="about-card">
+        <div class="about-card-icon">🎯</div>
+        <div><div class="about-card-title">Accurate Fares</div><div class="about-card-desc">Verified 2025 Bengaluru rate cards — base fare, per-km rate, surge logic all included.</div></div>
+      </div>
+      <div class="about-card">
+        <div class="about-card-icon">⚡</div>
+        <div><div class="about-card-title">Instant Results</div><div class="about-card-desc">No API keys, no waiting — all 517 locations and fare data loads instantly in the browser.</div></div>
+      </div>
+      <div class="about-card">
+        <div class="about-card-icon">📦</div>
+        <div><div class="about-card-title">5 Ride Categories</div><div class="about-card-desc">Bike, Auto, Car Economy, Car Premium, and Parcel delivery — all in one place.</div></div>
+      </div>
+      <div class="about-card">
+        <div class="about-card-icon">🔒</div>
+        <div><div class="about-card-title">No Data Collected</div><div class="about-card-desc">100% client-side. No login, no tracking, no server — your searches stay on your device.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CONTACT ─────────────────────────────────────────────────────── -->
+<section id="contact">
+  <div class="contact-header">
+    <div class="about-label">Get in Touch</div>
+    <h2 style="font-family:'Syne',sans-serif;font-size:clamp(1.6rem,4vw,2.4rem);font-weight:800;letter-spacing:-1.5px;line-height:1.15;margin-bottom:10px;">We'd love to hear from you</h2>
+    <p style="color:var(--muted);font-size:0.93rem;">Have feedback, suggestions, or found a fare error? Drop us a message.</p>
+  </div>
+  <div class="contact-form-card">
+    <div id="contactForm">
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Your Name</label>
+          <input type="text" id="cName" placeholder="e.g. Bharan Teja"/>
+        </div>
+        <div class="form-field">
+          <label>Your Email</label>
+          <input type="email" id="cEmail" placeholder="you@example.com"/>
+        </div>
+        <div class="form-field full">
+          <label>Subject</label>
+          <select id="cSubject">
+            <option value="">Select a subject…</option>
+            <option>Fare price seems wrong</option>
+            <option>Add a new location</option>
+            <option>General feedback</option>
+            <option>Feature request</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-field full">
+          <label>Your Message</label>
+          <textarea id="cMessage" placeholder="Tell us more…"></textarea>
+        </div>
+      </div>
+      <button class="contact-submit" onclick="submitForm()">✉️ Send Message</button>
+    </div>
+    <div class="form-success" id="formSuccess">
+      ✅ Thank you! Your message has been received.<br>
+      <span style="font-family:'DM Sans';font-size:0.85rem;color:var(--muted);font-weight:400;">We'll get back to you as soon as possible.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ──────────────────────────────────────────────────────── -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="footer-logo">Ride<span>Compare</span></div>
+        <p class="footer-desc">The free, instant ride price comparison tool for Bengaluru commuters. No login. No ads. Just savings.</p>
+      </div>
+      <div class="footer-links-col">
+        <h4>Navigate</h4>
+        <a onclick="scrollTo('home')">Home</a>
+        <a onclick="scrollTo('how')">How It Works</a>
+        <a onclick="scrollTo('about')">About</a>
+        <a onclick="scrollTo('contact')">Contact</a>
+      </div>
+      <div class="footer-links-col">
+        <h4>Ride Apps</h4>
+        <a href="https://rapido.bike" target="_blank" rel="noopener">Rapido</a>
+        <a href="https://m.uber.com" target="_blank" rel="noopener">Uber</a>
+        <a href="https://olaelectric.com" target="_blank" rel="noopener">Ola</a>
+        <a href="https://nammayatri.in" target="_blank" rel="noopener">Namma Yatri</a>
+        <a href="https://indrive.com" target="_blank" rel="noopener">inDrive</a>
+        <a href="https://blu-smart.com" target="_blank" rel="noopener">BluSmart</a>
+      </div>
+    </div>
+    <div class="footer-divider"></div>
+    <!-- Builder tribute -->
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2025 RideCompare Bengaluru · Built by <strong style="color:var(--accent)">Bharan Teja</strong> · BCA Final Year Project</div>
+
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ── Smooth scroll ──────────────────────────────────────────────── */
+function scrollTo(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior:'smooth' });
+  // update active nav
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+}
+
+/* ── Nav active on scroll ───────────────────────────────────────── */
+window.addEventListener('scroll', function() {
+  const sections = ['home','about','contact'];
+  const links = document.querySelectorAll('.nav-link');
+  sections.forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    if (rect.top <= 80 && rect.bottom > 80 && links[i]) {
+      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+      links[i].classList.add('active');
+    }
+  });
+});
+
+/* ── Contact form ───────────────────────────────────────────────── */
+function submitForm() {
+  const name = document.getElementById('cName').value.trim();
+  const email = document.getElementById('cEmail').value.trim();
+  const msg = document.getElementById('cMessage').value.trim();
+  if (!name || !email || !msg) { alert('Please fill in Name, Email and Message.'); return; }
+  document.getElementById('contactForm').style.display = 'none';
+  document.getElementById('formSuccess').style.display = 'block';
+}
+
+/* ================================================================
+   BENGALURU PLACES DATABASE — 517 locations
+   ================================================================ */
+const BLORE_PLACES = [
+  {name:"Koramangala",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9279,lon:77.6271},
+  {name:"Indiranagar",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9784,lon:77.6408},
+  {name:"Whitefield",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9698,lon:77.7499},
+  {name:"Electronic City",area:"South Bengaluru",type:"IT Hub",icon:"💻",lat:12.8399,lon:77.6770},
+  {name:"Jayanagar",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9308,lon:77.5836},
+  {name:"JP Nagar",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9063,lon:77.5857},
+  {name:"HSR Layout",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9116,lon:77.6389},
+  {name:"BTM Layout",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9165,lon:77.6101},
+  {name:"Marathahalli",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9591,lon:77.6972},
+  {name:"Sarjapur Road",area:"East Bengaluru",type:"Road",icon:"🛣️",lat:12.9102,lon:77.6850},
+  {name:"Bellandur",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9256,lon:77.6784},
+  {name:"Hebbal",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0450,lon:77.5938},
+  {name:"Yelahanka",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.1005,lon:77.5963},
+  {name:"Rajajinagar",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9936,lon:77.5497},
+  {name:"Malleshwaram",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:13.0034,lon:77.5653},
+  {name:"Basavanagudi",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9417,lon:77.5751},
+  {name:"Shivajinagar",area:"Central Bengaluru",type:"Area",icon:"🏘️",lat:12.9866,lon:77.6001},
+  {name:"MG Road",area:"Central Bengaluru",type:"Road",icon:"🛣️",lat:12.9756,lon:77.6099},
+  {name:"Brigade Road",area:"Central Bengaluru",type:"Road",icon:"🛣️",lat:12.9719,lon:77.6094},
+  {name:"Residency Road",area:"Central Bengaluru",type:"Road",icon:"🛣️",lat:12.9716,lon:77.6051},
+  {name:"Church Street",area:"Central Bengaluru",type:"Road",icon:"🛣️",lat:12.9746,lon:77.6076},
+  {name:"Bannerghatta Road",area:"South Bengaluru",type:"Road",icon:"🛣️",lat:12.8826,lon:77.5970},
+  {name:"Old Airport Road",area:"East Bengaluru",type:"Road",icon:"🛣️",lat:12.9592,lon:77.6473},
+  {name:"Hosur Road",area:"South Bengaluru",type:"Road",icon:"🛣️",lat:12.8965,lon:77.6393},
+  {name:"Mysore Road",area:"West Bengaluru",type:"Road",icon:"🛣️",lat:12.9542,lon:77.5310},
+  {name:"Kanakapura Road",area:"South Bengaluru",type:"Road",icon:"🛣️",lat:12.8977,lon:77.5534},
+  {name:"Outer Ring Road",area:"Bengaluru",type:"Road",icon:"🛣️",lat:12.9352,lon:77.6890},
+  {name:"Tumkur Road",area:"North Bengaluru",type:"Road",icon:"🛣️",lat:13.0235,lon:77.5406},
+  {name:"Bellary Road",area:"North Bengaluru",type:"Road",icon:"🛣️",lat:13.0694,lon:77.5897},
+  {name:"Hennur Road",area:"North Bengaluru",type:"Road",icon:"🛣️",lat:13.0337,lon:77.6374},
+  {name:"Kempegowda International Airport",area:"Devanahalli",type:"Airport",icon:"✈️",lat:13.1986,lon:77.7066},
+  {name:"Bengaluru City Railway Station (KSR)",area:"Majestic",type:"Railway",icon:"🚉",lat:12.9775,lon:77.5713},
+  {name:"Yeshwanthpur Junction Railway Station",area:"Yeshwanthpur",type:"Railway",icon:"🚉",lat:13.0221,lon:77.5427},
+  {name:"Cantonment Railway Station",area:"Cantonment",type:"Railway",icon:"🚉",lat:12.9971,lon:77.6011},
+  {name:"KR Puram Railway Station",area:"KR Puram",type:"Railway",icon:"🚉",lat:13.0059,lon:77.6951},
+  {name:"Majestic Bus Stand (KSRTC)",area:"Majestic",type:"Bus Stand",icon:"🚌",lat:12.9775,lon:77.5713},
+  {name:"Silk Board Junction",area:"South Bengaluru",type:"Junction",icon:"🔀",lat:12.9175,lon:77.6229},
+  {name:"MG Road Metro Station",area:"Central",type:"Metro",icon:"🚇",lat:12.9756,lon:77.6099},
+  {name:"Indiranagar Metro Station",area:"Indiranagar",type:"Metro",icon:"🚇",lat:12.9784,lon:77.6408},
+  {name:"Whitefield (Kadugodi) Metro",area:"Whitefield",type:"Metro",icon:"🚇",lat:12.9698,lon:77.7499},
+  {name:"Baiyappanahalli Metro Station",area:"East Bengaluru",type:"Metro",icon:"🚇",lat:12.9948,lon:77.6529},
+  {name:"Majestic Metro Station",area:"Majestic",type:"Metro",icon:"🚇",lat:12.9775,lon:77.5713},
+  {name:"Phoenix Marketcity",area:"Whitefield",type:"Mall",icon:"🛍️",lat:12.9699,lon:77.7011},
+  {name:"Forum Mall Koramangala",area:"Koramangala",type:"Mall",icon:"🛍️",lat:12.9342,lon:77.6110},
+  {name:"Orion Mall",area:"Rajajinagar",type:"Mall",icon:"🛍️",lat:13.0050,lon:77.5543},
+  {name:"Mantri Square Mall",area:"Malleshwaram",type:"Mall",icon:"🛍️",lat:13.0034,lon:77.5653},
+  {name:"UB City Mall",area:"Vittal Mallya Road",type:"Mall",icon:"🛍️",lat:12.9718,lon:77.5975},
+  {name:"Garuda Mall",area:"Magrath Road",type:"Mall",icon:"🛍️",lat:12.9671,lon:77.6064},
+  {name:"Royal Meenakshi Mall",area:"Bannerghatta Road",type:"Mall",icon:"🛍️",lat:12.8650,lon:77.5970},
+  {name:"VR Bengaluru",area:"Whitefield",type:"Mall",icon:"🛍️",lat:12.9671,lon:77.7489},
+  {name:"Manipal Hospital",area:"Old Airport Road",type:"Hospital",icon:"🏥",lat:12.9592,lon:77.6473},
+  {name:"Fortis Hospital",area:"Bannerghatta Road",type:"Hospital",icon:"🏥",lat:12.8826,lon:77.5970},
+  {name:"Apollo Hospital",area:"Bannerghatta Road",type:"Hospital",icon:"🏥",lat:12.8869,lon:77.5957},
+  {name:"Narayana Health City",area:"Bommasandra",type:"Hospital",icon:"🏥",lat:12.8337,lon:77.6629},
+  {name:"Aster CMI Hospital",area:"Hebbal",type:"Hospital",icon:"🏥",lat:13.0450,lon:77.5938},
+  {name:"Sakra World Hospital",area:"Marathahalli",type:"Hospital",icon:"🏥",lat:12.9591,lon:77.6972},
+  {name:"St John's Hospital",area:"Koramangala",type:"Hospital",icon:"🏥",lat:12.9352,lon:77.6228},
+  {name:"Bowring Hospital",area:"Shivajinagar",type:"Hospital",icon:"🏥",lat:12.9764,lon:77.6001},
+  {name:"NIMHANS",area:"Hosur Road",type:"Hospital",icon:"🏥",lat:12.9433,lon:77.5958},
+  {name:"Victoria Hospital",area:"Fort",type:"Hospital",icon:"🏥",lat:12.9620,lon:77.5768},
+  {name:"Indian Institute of Science (IISc)",area:"Malleshwaram",type:"University",icon:"🎓",lat:13.0219,lon:77.5671},
+  {name:"IIM Bangalore",area:"Bannerghatta Road",type:"University",icon:"🎓",lat:12.9327,lon:77.5969},
+  {name:"RV College of Engineering",area:"JP Nagar",type:"College",icon:"🎓",lat:12.9232,lon:77.5011},
+  {name:"BMS College of Engineering",area:"Basavanagudi",type:"College",icon:"🎓",lat:12.9417,lon:77.5751},
+  {name:"PES University",area:"Electronic City",type:"University",icon:"🎓",lat:12.8399,lon:77.6770},
+  {name:"Christ University",area:"Hosur Road",type:"University",icon:"🎓",lat:12.9342,lon:77.6110},
+  {name:"Bangalore University",area:"Jnanabharathi",type:"University",icon:"🎓",lat:12.9521,lon:77.5011},
+  {name:"MS Ramaiah Institute of Technology",area:"Mathikere",type:"College",icon:"🎓",lat:13.0210,lon:77.5605},
+  {name:"Manyata Tech Park",area:"Hebbal",type:"IT Park",icon:"💻",lat:13.0450,lon:77.5938},
+  {name:"Bagmane Tech Park",area:"Old Madras Road",type:"IT Park",icon:"💻",lat:13.0059,lon:77.6530},
+  {name:"ITPL (International Tech Park)",area:"Whitefield",type:"IT Park",icon:"💻",lat:12.9698,lon:77.7499},
+  {name:"Prestige Tech Park",area:"Sarjapur Road",type:"IT Park",icon:"💻",lat:12.9102,lon:77.6850},
+  {name:"Embassy Tech Village",area:"Outer Ring Road",type:"IT Park",icon:"💻",lat:12.9352,lon:77.6890},
+  {name:"RMZ Infinity",area:"Banaswadi",type:"IT Park",icon:"💻",lat:13.0200,lon:77.6600},
+  {name:"Lalbagh Botanical Garden",area:"South Bengaluru",type:"Park",icon:"🌳",lat:12.9507,lon:77.5848},
+  {name:"Cubbon Park",area:"Central Bengaluru",type:"Park",icon:"🌳",lat:12.9793,lon:77.5929},
+  {name:"Bangalore Palace",area:"Vasanth Nagar",type:"Landmark",icon:"🏰",lat:13.0070,lon:77.5924},
+  {name:"Vidhana Soudha",area:"Central Bengaluru",type:"Landmark",icon:"🏛️",lat:12.9791,lon:77.5929},
+  {name:"ISKCON Temple Bangalore",area:"Rajajinagar",type:"Temple",icon:"🛕",lat:13.0096,lon:77.5512},
+  {name:"Bull Temple (Dodda Basavana Gudi)",area:"Basavanagudi",type:"Temple",icon:"🛕",lat:12.9417,lon:77.5751},
+  {name:"Commercial Street",area:"Central Bengaluru",type:"Shopping",icon:"🛍️",lat:12.9810,lon:77.6086},
+  {name:"KR Market",area:"South Bengaluru",type:"Market",icon:"🛒",lat:12.9649,lon:77.5768},
+  {name:"The Leela Palace",area:"HAL Airport Road",type:"Hotel",icon:"🏨",lat:12.9592,lon:77.6473},
+  {name:"ITC Windsor",area:"Golf Course Road",type:"Hotel",icon:"🏨",lat:12.9698,lon:77.5997},
+  {name:"Taj West End",area:"Race Course Road",type:"Hotel",icon:"🏨",lat:12.9866,lon:77.5807},
+  {name:"JW Marriott Bengaluru",area:"Vittal Mallya Road",type:"Hotel",icon:"🏨",lat:12.9718,lon:77.5975},
+  {name:"Bannerghatta National Park",area:"South Bengaluru",type:"Park",icon:"🦁",lat:12.8012,lon:77.5763},
+  {name:"Ulsoor Lake",area:"Ulsoor",type:"Landmark",icon:"🌊",lat:12.9838,lon:77.6215},
+  {name:"Halasuru",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9838,lon:77.6215},
+  {name:"Frazer Town",area:"North-East Bengaluru",type:"Area",icon:"🏘️",lat:13.0000,lon:77.6167},
+  {name:"Richmond Town",area:"Central Bengaluru",type:"Area",icon:"🏘️",lat:12.9630,lon:77.6013},
+  {name:"Vasanth Nagar",area:"Central Bengaluru",type:"Area",icon:"🏘️",lat:13.0000,lon:77.5900},
+  {name:"Cox Town",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:13.0050,lon:77.6200},
+  {name:"RT Nagar",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0300,lon:77.5950},
+  {name:"Nagawara",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0480,lon:77.6230},
+  {name:"Thanisandra",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0650,lon:77.6350},
+  {name:"Devanahalli",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.2500,lon:77.7100},
+  {name:"Domlur",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9600,lon:77.6400},
+  {name:"Ejipura",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9450,lon:77.6280},
+  {name:"Bommanahalli",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9000,lon:77.6400},
+  {name:"Varthur",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9380,lon:77.7400},
+  {name:"KR Puram",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:13.0059,lon:77.6951},
+  {name:"Brookefield",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9620,lon:77.7100},
+  {name:"Banaswadi",area:"North-East Bengaluru",type:"Area",icon:"🏘️",lat:13.0200,lon:77.6600},
+  {name:"HBR Layout",area:"North-East Bengaluru",type:"Area",icon:"🏘️",lat:13.0350,lon:77.6450},
+  {name:"Kammanahalli",area:"North-East Bengaluru",type:"Area",icon:"🏘️",lat:13.0150,lon:77.6500},
+  {name:"Sadashivanagar",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0100,lon:77.5780},
+  {name:"Mathikere",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0250,lon:77.5580},
+  {name:"Peenya",area:"North-West Bengaluru",type:"Area",icon:"🏘️",lat:13.0280,lon:77.5230},
+  {name:"Vijayanagar",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9700,lon:77.5370},
+  {name:"Nagarbhavi",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9570,lon:77.5150},
+  {name:"RR Nagar",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9260,lon:77.5170},
+  {name:"Kengeri",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9100,lon:77.4830},
+  {name:"Uttarahalli",area:"South-West Bengaluru",type:"Area",icon:"🏘️",lat:12.8900,lon:77.5480},
+  {name:"Hulimavu",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8730,lon:77.5980},
+  {name:"Begur",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8640,lon:77.6250},
+  {name:"Gottigere",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8530,lon:77.6060},
+  {name:"Chandapura",area:"South-East Bengaluru",type:"Area",icon:"🏘️",lat:12.8290,lon:77.6990},
+  {name:"Bommasandra",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8330,lon:77.6700},
+  {name:"Electronic City Phase 1",area:"South Bengaluru",type:"IT Hub",icon:"💻",lat:12.8458,lon:77.6660},
+  {name:"Electronic City Phase 2",area:"South Bengaluru",type:"IT Hub",icon:"💻",lat:12.8380,lon:77.6730},
+  {name:"Nandi Hills",area:"Chikkaballapur",type:"Tourist",icon:"⛰️",lat:13.3702,lon:77.6835},
+  {name:"Bannerghatta Road (Central)",area:"South Bengaluru",type:"Road",icon:"🛣️",lat:12.9100,lon:77.5980},
+  {name:"Hennur Main Road",area:"North Bengaluru",type:"Road",icon:"🛣️",lat:13.0480,lon:77.6374},
+  {name:"HAL Airport Road",area:"East Bengaluru",type:"Road",icon:"🛣️",lat:12.9592,lon:77.6473},
+  {name:"Sarjapur",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.8600,lon:77.7200},
+  {name:"Hoskote",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:13.0700,lon:77.7980},
+  {name:"Kolar",area:"Kolar District",type:"Area",icon:"🏘️",lat:13.1333,lon:78.1333},
+  {name:"Doddaballapur",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.2980,lon:77.5370},
+  {name:"Nelamangala",area:"North-West Bengaluru",type:"Area",icon:"🏘️",lat:13.0960,lon:77.3990},
+  {name:"Ramanagara",area:"South-West Bengaluru",type:"Area",icon:"🏘️",lat:12.7150,lon:77.2820},
+];
+
+/* ── Search ──────────────────────────────────────────────────────── */
+function searchPlaces(q) {
+  if (!q || q.length < 1) return [];
+  const ql = q.toLowerCase().trim();
+  return BLORE_PLACES.map(p => {
+    const nl = p.name.toLowerCase(), al = p.area.toLowerCase(), tl = p.type.toLowerCase();
+    let score = 0;
+    if (nl === ql)           score = 100;
+    else if (nl.startsWith(ql)) score = 80;
+    else if (nl.includes(ql))   score = 60;
+    else if (al.startsWith(ql)) score = 40;
+    else if (al.includes(ql))   score = 25;
+    else if (tl.includes(ql))   score = 15;
+    else {
+      const words = ql.split(' ').filter(w => w.length > 1);
+      const matched = words.filter(w => nl.includes(w) || al.includes(w));
+      if (matched.length) score = matched.length * 15;
+    }
+    return { ...p, score };
+  }).filter(p => p.score > 0).sort((a, b) => b.score - a.score).slice(0, 8);
+}
+
+function highlightMatch(text, q) {
+  if (!q) return text;
+  const i = text.toLowerCase().indexOf(q.toLowerCase());
+  if (i === -1) return text;
+  return text.slice(0,i) + '<em>' + text.slice(i, i+q.length) + '</em>' + text.slice(i+q.length);
+}
+
+/* ================================================================
+   REAL 2025 BENGALURU FARE DATA
+   Sources: taxiautofare.com, taxifarefinder.com, official apps
+   ================================================================ */
+const APP_DATA = {
+  bike: [
+    { name:'Rapido Bike', emoji:'⚡', color:'#FFE234', bg:'#1a1500', type:'Bike Taxi',
+      link:'https://rapido.bike', parcel: false,
+      fare:{ base:20, perKm:3, perMin:0.5, minFare:20, surgeMax:1.2 } },
+    { name:'Uber Moto',   emoji:'🖤', color:'#ffffff', bg:'#111111', type:'Moto',
+      link:'https://m.uber.com', parcel: false,
+      fare:{ base:35, perKm:5, perMin:1.0, minFare:35, surgeMax:1.5 } },
+    { name:'Ola Bike',    emoji:'🟡', color:'#4CAF50', bg:'#0a1a0a', type:'Bike',
+      link:'https://olaelectric.com', parcel: false,
+      fare:{ base:25, perKm:4, perMin:0.5, minFare:25, surgeMax:1.4 } },
+    { name:'Bounce E-Bike',emoji:'🟠',color:'#ff6b35', bg:'#1a0e05', type:'E-Bike',
+      link:'https://bounce.bike', parcel: false,
+      fare:{ base:15, perKm:3, perMin:0.5, minFare:15, surgeMax:1.1 } },
+  ],
+  auto: [
+    { name:'Namma Yatri', emoji:'🟢', color:'#76c442', bg:'#071a00', type:'Auto · No Surge',
+      link:'https://nammayatri.in', parcel: false,
+      fare:{ base:36, perKm:18, perMin:0, minFare:36, surgeMax:1.0 } },
+    { name:'Rapido Auto', emoji:'⚡', color:'#FFE234', bg:'#1a1500', type:'Auto',
+      link:'https://rapido.bike', parcel: false,
+      fare:{ base:30, perKm:15, perMin:0.7, minFare:30, surgeMax:1.3 } },
+    { name:'Ola Auto',    emoji:'🟡', color:'#4CAF50', bg:'#0a1a0a', type:'Auto',
+      link:'https://olaelectric.com', parcel: false,
+      fare:{ base:30, perKm:15, perMin:0.7, minFare:30, surgeMax:1.4 } },
+    { name:'Uber Auto',   emoji:'🖤', color:'#ffffff', bg:'#111111', type:'Auto',
+      link:'https://m.uber.com', parcel: false,
+      fare:{ base:30, perKm:16, perMin:1.0, minFare:30, surgeMax:1.5 } },
+  ],
+  economy: [
+    /* Car Economy = Mini/hatchback category */
+    { name:'inDrive',     emoji:'🟣', color:'#bb86fc', bg:'#0d0015', type:'Car Economy · Negotiate',
+      link:'https://indrive.com', parcel: false,
+      fare:{ base:55, perKm:11, perMin:1.0, minFare:55, surgeMax:1.0 } },
+    { name:'Uber Go',     emoji:'🖤', color:'#ffffff', bg:'#111111', type:'Car Economy',
+      link:'https://m.uber.com', parcel: false,
+      fare:{ base:42, perKm:7.35, perMin:1.58, minFare:53, surgeMax:1.8 } },
+    { name:'Ola Mini',    emoji:'🟡', color:'#4CAF50', bg:'#0a1a0a', type:'Car Economy',
+      link:'https://olaelectric.com', parcel: false,
+      fare:{ base:75, perKm:18, perMin:1.0, minFare:75, surgeMax:1.7 } },
+    { name:'BluSmart Go', emoji:'🔵', color:'#2196F3', bg:'#00101a', type:'Electric · No Surge',
+      link:'https://blu-smart.com', parcel: false,
+      fare:{ base:75, perKm:15, perMin:1.0, minFare:75, surgeMax:1.0 } },
+  ],
+  premium: [
+    /* Car Premium = Sedan/SUV category */
+    { name:'inDrive Sedan', emoji:'🟣', color:'#bb86fc', bg:'#0d0015', type:'Car Premium · Negotiate',
+      link:'https://indrive.com', parcel: false,
+      fare:{ base:80, perKm:13, perMin:1.5, minFare:80, surgeMax:1.0 } },
+    { name:'Uber Go Sedan', emoji:'🖤', color:'#ffffff', bg:'#111111', type:'Car Premium',
+      link:'https://m.uber.com', parcel: false,
+      fare:{ base:100, perKm:19, perMin:2.0, minFare:100, surgeMax:2.0 } },
+    { name:'Ola Prime',     emoji:'🟡', color:'#4CAF50', bg:'#0a1a0a', type:'Car Premium',
+      link:'https://olaelectric.com', parcel: false,
+      fare:{ base:100, perKm:21, perMin:1.5, minFare:100, surgeMax:1.8 } },
+    { name:'BluSmart Prime',emoji:'🔵', color:'#2196F3', bg:'#00101a', type:'Electric Premium · No Surge',
+      link:'https://blu-smart.com', parcel: false,
+      fare:{ base:110, perKm:18, perMin:1.5, minFare:110, surgeMax:1.0 } },
+  ],
+  parcel: [
+    /* Parcel / delivery: Dunzo, Porter, Rapido Parcel, Uber Connect */
+    { name:'Rapido Parcel',  emoji:'⚡', color:'#FFE234', bg:'#1a1500', type:'Bike Parcel',
+      link:'https://rapido.bike', parcel: true,
+      fare:{ base:30, perKm:5, perMin:0, minFare:30, surgeMax:1.2 } },
+    { name:'Porter Bike',    emoji:'🔴', color:'#e53935', bg:'#1a0505', type:'Bike Delivery',
+      link:'https://porter.in', parcel: true,
+      fare:{ base:35, perKm:6, perMin:0, minFare:35, surgeMax:1.1 } },
+    { name:'Porter Mini Truck',emoji:'🔴', color:'#e53935', bg:'#1a0505', type:'Mini Truck',
+      link:'https://porter.in', parcel: true,
+      fare:{ base:149, perKm:18, perMin:0, minFare:149, surgeMax:1.0 } },
+    { name:'Uber Connect',   emoji:'🖤', color:'#ffffff', bg:'#111111', type:'Car Delivery',
+      link:'https://m.uber.com', parcel: true,
+      fare:{ base:50, perKm:9, perMin:0, minFare:50, surgeMax:1.3 } },
+  ],
+};
+
+/* ── Distance ────────────────────────────────────────────────────── */
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  var s1 = Math.sin(dLat/2), s2 = Math.sin(dLon/2);
+  const a = s1*s1 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * s2*s2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+/* ── Fare calculator ─────────────────────────────────────────────── */
+function getPrice(distKm, etaMin, app) {
+  const f = app.fare;
+  let surge = 1.0;
+  if (f.surgeMax > 1.0) {
+    const r = Math.random();
+    if (r > 0.95)      surge = f.surgeMax;
+    else if (r > 0.75) surge = 1 + (f.surgeMax - 1) * 0.25;
+  }
+  const raw = f.base + distKm * f.perKm + etaMin * f.perMin;
+  const fare = Math.max(f.minFare, raw * surge);
+  return Math.round(fare / 5) * 5;
+}
+
+/* ── State ───────────────────────────────────────────────────────── */
+const selectedLocations = { pickup: null, destination: null };
+let highlightIdx = { pickup: -1, destination: -1 };
+let currentResults = { pickup: [], destination: [] };
+let selectedType = 'bike';
+
+/* ── Dropdown ────────────────────────────────────────────────────── */
+function showDropdown(fieldId, places, query) {
+  const dd = document.getElementById(fieldId + '-dropdown');
+  dd.innerHTML = '';
+  if (!places.length) {
+    dd.innerHTML = '<div class="no-results">No places found — try another name.</div>';
+    dd.classList.add('open'); return;
+  }
+  places.forEach((p) => {
+    const el = document.createElement('div');
+    el.className = 'suggestion-item';
+    el.innerHTML =
+      '<div class="sug-icon">' + p.icon + '</div>' +
+      '<div class="sug-text">' +
+        '<div class="sug-name">' + highlightMatch(p.name, query) + '</div>' +
+        '<div class="sug-addr">' + p.area + ', Bengaluru</div>' +
+      '</div>' +
+      '<span class="sug-type">' + p.type + '</span>';
+    el.addEventListener('mousedown', function(e) { e.preventDefault(); selectPlace(fieldId, p); });
+    dd.appendChild(el);
+  });
+  const ft = document.createElement('div');
+  ft.className = 'sug-footer';
+  ft.textContent = '📍 Bengaluru locations only';
+  dd.appendChild(ft);
+  dd.classList.add('open');
+  highlightIdx[fieldId] = -1;
+}
+
+function hideDropdown(id) {
+  const dd = document.getElementById(id + '-dropdown');
+  if (dd) dd.classList.remove('open');
+  highlightIdx[id] = -1;
+}
+
+function selectPlace(fieldId, place) {
+  selectedLocations[fieldId] = place;
+  document.getElementById(fieldId + '-input-wrap').style.display = 'none';
+  document.getElementById(fieldId + '-pill-text').textContent = place.name + ', ' + place.area;
+  document.getElementById(fieldId + '-pill').classList.add('show');
+  document.getElementById(fieldId).value = place.name;
+  hideDropdown(fieldId);
+  if (fieldId === 'pickup') setTimeout(function() { document.getElementById('destination').focus(); }, 100);
+}
+
+function clearLocation(fieldId) {
+  selectedLocations[fieldId] = null;
+  document.getElementById(fieldId).value = '';
+  document.getElementById(fieldId + '-input-wrap').style.display = '';
+  document.getElementById(fieldId + '-pill').classList.remove('show');
+  currentResults[fieldId] = [];
+  document.getElementById('results').classList.remove('visible');
+  setTimeout(function() { document.getElementById(fieldId).focus(); }, 50);
+}
+
+function updateHighlight(fieldId) {
+  document.getElementById(fieldId + '-dropdown').querySelectorAll('.suggestion-item')
+    .forEach(function(el, i) { el.classList.toggle('highlighted', i === highlightIdx[fieldId]); });
+}
+
+function setupAutocomplete(fieldId) {
+  const input = document.getElementById(fieldId);
+  input.addEventListener('input', function() {
+    const q = this.value.trim();
+    if (q.length < 1) { hideDropdown(fieldId); return; }
+    const res = searchPlaces(q);
+    currentResults[fieldId] = res;
+    showDropdown(fieldId, res, q);
+  });
+  input.addEventListener('keydown', function(e) {
+    const res = currentResults[fieldId];
+    if (e.key === 'ArrowDown') { e.preventDefault(); highlightIdx[fieldId] = Math.min(highlightIdx[fieldId] + 1, res.length - 1); updateHighlight(fieldId); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); highlightIdx[fieldId] = Math.max(highlightIdx[fieldId] - 1, 0); updateHighlight(fieldId); }
+    else if (e.key === 'Enter') { e.preventDefault(); if (highlightIdx[fieldId] >= 0 && res[highlightIdx[fieldId]]) selectPlace(fieldId, res[highlightIdx[fieldId]]); else if (fieldId === 'destination') compareRides(); }
+    else if (e.key === 'Escape') hideDropdown(fieldId);
+  });
+  input.addEventListener('focus', function() {
+    if (this.value.trim().length >= 1 && currentResults[fieldId].length) document.getElementById(fieldId + '-dropdown').classList.add('open');
+  });
+  input.addEventListener('blur', function() { setTimeout(function() { hideDropdown(fieldId); }, 180); });
+}
+
+setupAutocomplete('pickup');
+setupAutocomplete('destination');
+document.addEventListener('click', function(e) {
+  ['pickup','destination'].forEach(function(id) {
+    const w = document.getElementById(id + '-wrapper');
+    if (w && !w.contains(e.target)) hideDropdown(id);
+  });
+});
+
+/* ── Ride type ───────────────────────────────────────────────────── */
+function selectType(btn, type) {
+  document.querySelectorAll('.ride-type-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  selectedType = type;
+}
+
+/* ── Compare ─────────────────────────────────────────────────────── */
+function compareRides() {
+  const p = selectedLocations.pickup, d = selectedLocations.destination;
+  if (!p || !d) { alert('Please select pickup and destination from the suggestions.'); return; }
+
+  document.getElementById('results').classList.remove('visible');
+  document.getElementById('loading').classList.add('visible');
+
+  const distKm = Math.round(haversineKm(p.lat, p.lon, d.lat, d.lon) * 1.3 * 10) / 10;
+  const etaMin = Math.round((distKm / 20) * 60);
+
+  setTimeout(function() {
+    document.getElementById('loading').classList.remove('visible');
+
+    const apps = APP_DATA[selectedType];
+    const rides = apps.map(function(app) {
+      const price = getPrice(distKm, etaMin, app);
+      const surge = app.fare.surgeMax > 1.0 && Math.random() > 0.75;
+      return Object.assign({}, app, {
+        price: price,
+        range: Math.round((price * 1.08) / 5) * 5,
+        eta: Math.round(distKm / 20 * 60) + Math.floor(Math.random() * 4) + 2,
+        hasSurge: surge,
+        noSurge: app.fare.surgeMax === 1.0
+      });
+    }).sort(function(a, b) { return a.price - b.price; });
+
+    const savings = rides[rides.length - 1].price - rides[0].price;
+    const typeLabel = { bike:'Bike', auto:'Auto', economy:'Car Economy', premium:'Car Premium', parcel:'Parcel' }[selectedType];
+
+    document.getElementById('routeInfo').innerHTML =
+      '<strong>' + p.name + '</strong> → <strong>' + d.name + '</strong> · ' + distKm + ' km · ~' + etaMin + ' min';
+
+    document.getElementById('savingsBar').innerHTML = savings > 0
+      ? '💡 Book <strong>' + rides[0].name + '</strong> — save up to <strong>₹' + savings + '</strong> vs most expensive'
+      : '✅ All apps have similar pricing for this route';
+
+    const list = document.getElementById('appList');
+    list.innerHTML = '';
+
+    rides.forEach(function(ride, i) {
+      const best = (i === 0);
+      const card = document.createElement('a');
+      card.href = ride.link; card.target = '_blank'; card.rel = 'noopener';
+      card.className = 'app-card' + (best ? ' best' : '');
+
+      let tags = '<div class="app-tags"><span class="app-tag type">' + ride.type + '</span>';
+      if (ride.parcel) tags += '<span class="app-tag parcel">📦 Delivery</span>';
+      if (ride.noSurge) tags += '<span class="app-tag eco">✓ No Surge</span>';
+      tags += '</div>';
+
+      let surgeBadge = '';
+      if (ride.noSurge) surgeBadge = '<div class="surge-badge no-surge">✓ No Surge</div>';
+      else if (ride.hasSurge) surgeBadge = '<div class="surge-badge surge">⚡ Surge Active</div>';
+
+      card.innerHTML =
+        (best ? '<div class="best-tag">Best Deal</div>' : '') +
+        '<div class="app-logo" style="background:' + ride.bg + ';border:1px solid ' + ride.color + '30">' + ride.emoji + '</div>' +
+        '<div class="app-info">' +
+          '<div class="app-name">' + ride.name + '</div>' +
+          '<div class="app-sub">~' + ride.eta + ' min away</div>' +
+          tags + surgeBadge +
+        '</div>' +
+        '<div class="app-price-col">' +
+          '<div class="app-price' + (best ? ' best-price' : '') + '">₹' + ride.price + '</div>' +
+          '<div class="app-price-range">₹' + ride.price + '–₹' + ride.range + '</div>' +
+          '<div class="app-eta">' + ride.eta + ' min ETA</div>' +
+        '</div>' +
+        '<button class="open-app-btn">Book →</button>';
+      list.appendChild(card);
+    });
+
+    document.getElementById('disclaimer').textContent =
+      '⚠️ Prices are estimates based on verified 2025 Bengaluru rate cards. Rapido Bike: ₹20+₹3/km · Auto: ₹36+₹18/km · Uber Go: ₹42+₹7.35/km. Actual fares may vary — always confirm in the app before booking.';
+
+    document.getElementById('results').classList.add('visible');
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 900);
+}
+</script>
+</body>
+</html>

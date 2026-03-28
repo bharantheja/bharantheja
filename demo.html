@@ -1,0 +1,1182 @@
+<!--
+=============================================================
+  RIDECOMPARE BENGALURU — VS Code Local Server Setup
+=============================================================
+
+  STEP 1: Install VS Code (if not already)
+    https://code.visualstudio.com/download
+
+  STEP 2: Install "Live Server" extension
+    → Open VS Code
+    → Press Ctrl+Shift+X  (Extensions panel)
+    → Search: "Live Server"
+    → Install by Ritwick Dey (green Install button)
+
+  STEP 3: Open this file in VS Code
+    → File → Open File → select ride-compare.html
+      OR drag this file into VS Code
+
+  STEP 4: Launch Live Server
+    → Right-click anywhere inside the HTML code
+    → Click "Open with Live Server"
+      OR click "Go Live" button at the bottom-right status bar
+
+  STEP 5: Browser opens automatically at:
+    http://127.0.0.1:5500/ride-compare.html
+
+  That's it! The page auto-refreshes every time you save.
+
+-------------------------------------------------------------
+  NO PYTHON / NO NODE / NO INSTALL NEEDED — just Live Server
+-------------------------------------------------------------
+
+  WANT TO DEPLOY ONLINE FOR FREE?
+  → Netlify: drag & drop this file at https://netlify.com/drop
+  → GitHub Pages:
+      1. Create repo at github.com
+      2. Upload this file
+      3. Settings → Pages → Branch: main → Save
+      4. Live at: https://yourusername.github.io/repo/ride-compare.html
+
+=============================================================
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RideCompare – Best Ride Prices Instantly</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0a0f; --surface:#13131a; --card:#1a1a24;
+  --border:#2a2a3a; --accent:#00e5a0; --accent2:#6c63ff;
+  --text:#f0f0f5; --muted:#888899;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,160,0.03)1px,transparent 1px),linear-gradient(90deg,rgba(0,229,160,0.03)1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+
+/* HEADER */
+header{position:relative;z-index:10;padding:20px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:rgba(10,10,15,0.9);backdrop-filter:blur(12px);}
+.logo{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;letter-spacing:-1px;}
+.logo span{color:var(--accent);}
+.badge{background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.3);color:var(--accent);font-size:0.68rem;font-weight:500;padding:4px 10px;border-radius:20px;letter-spacing:1px;text-transform:uppercase;}
+
+/* HERO */
+.hero{position:relative;z-index:5;text-align:center;padding:48px 20px 32px;}
+.hero h1{font-family:'Syne',sans-serif;font-size:clamp(2rem,5.5vw,3.6rem);font-weight:800;line-height:1.1;letter-spacing:-2px;}
+.hero h1 em{font-style:normal;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero p{color:var(--muted);font-size:1rem;margin-top:10px;font-weight:300;}
+
+/* SEARCH */
+.search-card{position:relative;z-index:6;max-width:620px;margin:0 auto 20px;padding:0 18px;}
+.search-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:22px;box-shadow:0 8px 40px rgba(0,0,0,0.4);}
+.input-group{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+.autocomplete-wrapper{position:relative;width:100%;}
+.input-wrap{position:relative;}
+.input-wrap .icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:1rem;pointer-events:none;}
+.input-wrap input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:13px 13px 13px 40px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.92rem;outline:none;transition:border-color 0.2s,box-shadow 0.2s;}
+.input-wrap input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,229,160,0.1);}
+.input-wrap input::placeholder{color:var(--muted);}
+.connector{display:flex;align-items:center;padding:0 0 0 13px;margin:-3px 0;}
+.connector-line{width:2px;height:20px;background:linear-gradient(to bottom,var(--accent),var(--accent2));border-radius:2px;margin-left:5px;}
+
+/* LOCATION PILL */
+.location-pill{display:none;align-items:center;gap:8px;background:rgba(0,229,160,0.07);border:1px solid rgba(0,229,160,0.25);border-radius:11px;padding:10px 13px 10px 40px;font-size:0.86rem;position:relative;}
+.location-pill.show{display:flex;}
+.location-pill .pill-icon{position:absolute;left:13px;font-size:0.95rem;}
+.location-pill .pill-text{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
+.location-pill .pill-clear{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:0;flex-shrink:0;transition:color 0.15s;}
+.location-pill .pill-clear:hover{color:#ff6b6b;}
+
+/* ROUTE SUMMARY BAR */
+.route-summary{display:none;background:linear-gradient(135deg,rgba(0,229,160,0.06),rgba(108,99,255,0.06));border:1px solid rgba(0,229,160,0.18);border-radius:13px;padding:12px 16px;margin-bottom:6px;align-items:center;justify-content:space-between;gap:10px;}
+.route-summary.show{display:flex;}
+.route-summary-left{display:flex;align-items:center;gap:10px;}
+.route-path{font-size:0.82rem;color:var(--text);}
+.route-path strong{color:var(--accent);}
+.route-dist-chip{background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.25);border-radius:20px;padding:4px 11px;font-size:0.72rem;color:var(--accent);font-weight:600;white-space:nowrap;}
+
+/* SUGGESTIONS DROPDOWN */
+.suggestions-dropdown{position:absolute;top:calc(100% + 5px);left:0;right:0;background:#1a1a26;border:1px solid var(--border);border-radius:13px;overflow:hidden;z-index:9999;box-shadow:0 16px 48px rgba(0,0,0,0.7);display:none;animation:dropIn 0.15s ease;}
+.suggestions-dropdown.open{display:block;}
+@keyframes dropIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+.suggestion-item{display:flex;align-items:center;gap:11px;padding:11px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);transition:background 0.12s;}
+.suggestion-item:last-of-type{border-bottom:none;}
+.suggestion-item:hover,.suggestion-item.highlighted{background:rgba(0,229,160,0.07);}
+.sug-icon{width:30px;height:30px;background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.18);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0;}
+.sug-text{flex:1;min-width:0;}
+.sug-name{font-size:0.85rem;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sug-name em{font-style:normal;color:var(--accent);}
+.sug-addr{font-size:0.72rem;color:var(--muted);margin-top:1px;}
+.sug-type{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.7px;color:var(--accent2);background:rgba(108,99,255,0.12);padding:2px 6px;border-radius:20px;flex-shrink:0;}
+.sug-footer{padding:7px 14px;background:rgba(0,0,0,0.2);font-size:0.68rem;color:var(--muted);border-top:1px solid var(--border);}
+.no-results{padding:14px;text-align:center;color:var(--muted);font-size:0.84rem;}
+
+/* RIDE TYPE */
+.ride-type-row{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;}
+.ride-type-btn{flex:1;min-width:75px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:9px 7px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;text-align:center;transition:all 0.2s;}
+.ride-type-btn span{display:block;font-size:1.3rem;margin-bottom:3px;}
+.ride-type-btn.active,.ride-type-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,0.08);}
+.compare-btn{width:100%;background:linear-gradient(135deg,var(--accent),#00c87a);border:none;border-radius:11px;padding:15px;color:#000;font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;}
+.compare-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,229,160,0.3);}
+.compare-btn:active{transform:translateY(0);}
+.compare-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+
+/* LOADING */
+.loading{text-align:center;padding:36px;display:none;}
+.loading.visible{display:block;}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;margin:0 auto 14px;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading p{color:var(--muted);font-size:0.88rem;}
+
+/* RESULTS */
+.results-section{position:relative;z-index:5;max-width:660px;margin:0 auto;padding:0 18px 60px;display:none;}
+.results-section.visible{display:block;animation:fadeUp 0.4s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.results-header h2{font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:700;}
+.route-meta{color:var(--muted);font-size:0.82rem;}
+.route-meta strong{color:var(--text);}
+.savings-bar{background:linear-gradient(135deg,rgba(0,229,160,0.1),rgba(108,99,255,0.1));border:1px solid rgba(0,229,160,0.2);border-radius:11px;padding:12px 16px;margin-bottom:14px;font-size:0.88rem;}
+.savings-bar strong{color:var(--accent);}
+.app-list{display:flex;flex-direction:column;gap:10px;}
+.app-card{background:var(--surface);border:1px solid var(--border);border-radius:15px;padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;text-decoration:none;color:inherit;}
+.app-card:hover{border-color:var(--accent);background:var(--card);transform:translateX(4px);box-shadow:0 4px 20px rgba(0,0,0,0.3),-4px 0 0 var(--accent);}
+.app-card.best{border-color:rgba(0,229,160,0.4);background:linear-gradient(135deg,rgba(0,229,160,0.05),rgba(108,99,255,0.05));}
+.best-tag{position:absolute;top:0;right:0;background:var(--accent);color:#000;font-size:0.62rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border-bottom-left-radius:9px;}
+.app-logo{width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;}
+.app-info{flex:1;min-width:0;}
+.app-name{font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;display:flex;align-items:center;flex-wrap:wrap;gap:4px;}
+.app-sub{color:var(--muted);font-size:0.77rem;margin-top:2px;}
+.app-fare-detail{font-size:0.7rem;color:var(--muted);margin-top:4px;}
+.tag{font-size:0.63rem;padding:2px 6px;border-radius:8px;font-weight:500;}
+.tag-surge{color:#ffb347;background:rgba(255,179,71,0.12);}
+.tag-nosurge{color:#00e5a0;background:rgba(0,229,160,0.1);}
+.tag-type{color:var(--accent2);background:rgba(108,99,255,0.12);}
+.app-price-col{text-align:right;flex-shrink:0;}
+.app-price{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;}
+.app-price.best-price{color:var(--accent);}
+.app-price-range{font-size:0.72rem;color:var(--muted);}
+.app-eta{color:var(--muted);font-size:0.74rem;margin-top:1px;}
+.open-app-btn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.78rem;cursor:pointer;transition:all 0.2s;flex-shrink:0;}
+.app-card:hover .open-app-btn{background:var(--accent);color:#000;border-color:var(--accent);}
+
+/* HOW IT WORKS */
+.how-section{position:relative;z-index:5;max-width:660px;margin:0 auto 60px;padding:0 18px;}
+.how-section h3{font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:18px;text-align:center;}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+@media(max-width:480px){.steps{grid-template-columns:1fr;}}
+.step{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:18px;text-align:center;}
+.step-num{width:32px;height:32px;background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700;color:var(--accent);}
+.step p{font-size:0.8rem;color:var(--muted);}
+.step strong{color:var(--text);display:block;margin-bottom:5px;font-size:0.88rem;}
+
+/* DISCLAIMER */
+.disclaimer{position:relative;z-index:5;max-width:660px;margin:0 auto 40px;padding:0 18px;}
+.disclaimer p{font-size:0.74rem;color:var(--muted);text-align:center;line-height:1.6;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Ride<span>Compare</span></div>
+  <div class="badge">📍 Bengaluru</div>
+</header>
+
+<section class="hero">
+  <h1>Find the <em>cheapest ride</em><br>across all apps</h1>
+  <p>Compare Rapido, Uber, Ola &amp; more — instantly</p>
+</section>
+
+<div class="search-card">
+  <div class="search-box">
+    <div class="input-group">
+      <!-- PICKUP -->
+      <div class="autocomplete-wrapper" id="pickup-wrapper">
+        <div class="input-wrap" id="pickup-input-wrap">
+          <span class="icon">📍</span>
+          <input type="text" id="pickup" placeholder="Search pickup in Bengaluru..." autocomplete="off"/>
+        </div>
+        <div class="location-pill" id="pickup-pill">
+          <span class="pill-icon">📍</span>
+          <span class="pill-text" id="pickup-pill-text"></span>
+          <button class="pill-clear" onclick="clearLocation('pickup')">✕</button>
+        </div>
+        <div class="suggestions-dropdown" id="pickup-dropdown"></div>
+      </div>
+
+      <div class="connector"><div class="connector-line"></div></div>
+
+      <!-- DESTINATION -->
+      <div class="autocomplete-wrapper" id="destination-wrapper">
+        <div class="input-wrap" id="destination-input-wrap">
+          <span class="icon">🏁</span>
+          <input type="text" id="destination" placeholder="Search destination in Bengaluru..." autocomplete="off"/>
+        </div>
+        <div class="location-pill" id="destination-pill">
+          <span class="pill-icon">🏁</span>
+          <span class="pill-text" id="destination-pill-text"></span>
+          <button class="pill-clear" onclick="clearLocation('destination')">✕</button>
+        </div>
+        <div class="suggestions-dropdown" id="destination-dropdown"></div>
+      </div>
+    </div>
+
+    <!-- ROUTE SUMMARY (shown after both selected) -->
+    <div class="route-summary" id="routeSummary">
+      <div class="route-summary-left">
+        <span>🗺️</span>
+        <span class="route-path" id="routeSummaryText"></span>
+      </div>
+      <span class="route-dist-chip" id="routeDistChip"></span>
+    </div>
+
+    <!-- RIDE TYPE -->
+    <div class="ride-type-row">
+      <button class="ride-type-btn active" onclick="selectType(this,'bike')"><span>🏍️</span>Bike</button>
+      <button class="ride-type-btn" onclick="selectType(this,'auto')"><span>🛺</span>Auto</button>
+      <button class="ride-type-btn" onclick="selectType(this,'mini')"><span>🚗</span>Mini</button>
+      <button class="ride-type-btn" onclick="selectType(this,'sedan')"><span>🚙</span>Sedan</button>
+    </div>
+
+    <button class="compare-btn" id="compareBtn" onclick="compareRides()">⚡ Compare Prices</button>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <p>Fetching prices from all apps...</p>
+</div>
+
+<!-- RESULTS -->
+<div class="results-section" id="results">
+  <div class="results-header">
+    <h2>Available Rides</h2>
+    <div class="route-meta" id="routeMeta"></div>
+  </div>
+  <div class="savings-bar" id="savingsBar"></div>
+  <div class="app-list" id="appList"></div>
+</div>
+
+<div class="how-section">
+  <h3>How It Works</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><strong>Enter Route</strong><p>Pick pickup &amp; destination anywhere in Bengaluru</p></div>
+    <div class="step"><div class="step-num">2</div><strong>Compare</strong><p>See all app prices ranked cheapest first</p></div>
+    <div class="step"><div class="step-num">3</div><strong>Book</strong><p>Tap your choice to open the app &amp; book</p></div>
+  </div>
+</div>
+
+<div class="disclaimer">
+  <p>⚠️ Prices are estimates based on verified 2025 Bengaluru fare cards (sources: taxiautofare.com, taxifarefinder.com, official apps). Rapido Bike: ₹20+₹3/km · Auto: ₹36 base+₹18/km · Uber Go: ₹42+₹7.35/km. Actual fares may vary — always confirm in the app before booking.</p>
+</div>
+
+<script>
+/* ================================================================
+   BENGALURU PLACES DATABASE — 500+ locations
+   ================================================================ */
+const BLORE_PLACES = [
+// ── ALL LOCATIONS FROM USER LIST ──────────────────────────────────────────
+  {name:"Whitefield",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9698,lon:77.7499},
+  {name:"Sarjapur Road",area:"East Bengaluru",type:"Road",icon:"🛣️",lat:12.9102,lon:77.6850},
+  {name:"Electronic City Phase I",area:"South Bengaluru",type:"Area",icon:"💻",lat:12.8399,lon:77.6770},
+  {name:"Marathahalli",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9591,lon:77.6972},
+  {name:"HSR Layout",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9116,lon:77.6389},
+  {name:"Koramangala",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9279,lon:77.6271},
+  {name:"Bellandur",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9256,lon:77.6784},
+  {name:"Bannerghatta Road",area:"South Bengaluru",type:"Road",icon:"🛣️",lat:12.8826,lon:77.5970},
+  {name:"Mahadevapura",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9945,lon:77.7104},
+  {name:"JP Nagar",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9063,lon:77.5857},
+  {name:"BTM Layout",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9165,lon:77.6101},
+  {name:"Doddenakundi",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9710,lon:77.7086},
+  {name:"Kanakapura Road",area:"South Bengaluru",type:"Road",icon:"🛣️",lat:12.8977,lon:77.5534},
+  {name:"Indira Nagar",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9784,lon:77.6408},
+  {name:"K R Puram",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:13.0059,lon:77.6951},
+  {name:"Brookefield",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9620,lon:77.7100},
+  {name:"Thanisandra Main Road",area:"North Bengaluru",type:"Road",icon:"🛣️",lat:13.0650,lon:77.6350},
+  {name:"Yelahanka",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.1005,lon:77.5963},
+  {name:"Hennur Road",area:"North Bengaluru",type:"Road",icon:"🛣️",lat:13.0337,lon:77.6374},
+  {name:"Horamavu",area:"North-East Bengaluru",type:"Area",icon:"🏘️",lat:13.0267,lon:77.6630},
+  {name:"Ramamurthy Nagar",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:13.0103,lon:77.6671},
+  {name:"Jayanagar",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9308,lon:77.5836},
+  {name:"Hosur Road",area:"South Bengaluru",type:"Road",icon:"🛣️",lat:12.8965,lon:77.6393},
+  {name:"Panathur",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9389,lon:77.7010},
+  {name:"Electronic City Phase II",area:"South Bengaluru",type:"Area",icon:"💻",lat:12.8284,lon:77.6748},
+  {name:"Hebbal",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0450,lon:77.5938},
+  {name:"Kundalahalli",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9749,lon:77.7104},
+  {name:"Marathahalli-Sarjapur Outer Ring Road",area:"East Bengaluru",type:"Road",icon:"🛣️",lat:12.9352,lon:77.6890},
+  {name:"Kaggadasapura",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9916,lon:77.6756},
+  {name:"CV Raman Nagar",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9849,lon:77.6618},
+  {name:"Banashankari",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9263,lon:77.5670},
+  {name:"Hosa Road",area:"South Bengaluru",type:"Road",icon:"🛣️",lat:12.8780,lon:77.6680},
+  {name:"Old Airport Road",area:"East Bengaluru",type:"Road",icon:"🛣️",lat:12.9592,lon:77.6473},
+  {name:"Old Madras Road",area:"East Bengaluru",type:"Road",icon:"🛣️",lat:13.0059,lon:77.6530},
+  {name:"Budigere",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:13.0570,lon:77.7690},
+  {name:"Hoodi",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:13.0014,lon:77.7143},
+  {name:"Off Sarjapur Road",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9000,lon:77.6900},
+  {name:"Varthur",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9380,lon:77.7400},
+  {name:"Sarjapur",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.8619,lon:77.7855},
+  {name:"Harlur",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9000,lon:77.6700},
+  {name:"Rajaji Nagar",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9936,lon:77.5497},
+  {name:"Bommanahalli",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9000,lon:77.6400},
+  {name:"Haralur Road",area:"South Bengaluru",type:"Road",icon:"🛣️",lat:12.8980,lon:77.6750},
+  {name:"Kadugodi",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:13.0000,lon:77.7600},
+  {name:"HBR Layout",area:"North-East Bengaluru",type:"Area",icon:"🏘️",lat:13.0350,lon:77.6450},
+  {name:"Raja Rajeshwari Nagar",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9091,lon:77.5098},
+  {name:"Kasturi Nagar",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:13.0069,lon:77.6570},
+  {name:"Yeshwanthpur",area:"North-West Bengaluru",type:"Area",icon:"🏘️",lat:13.0221,lon:77.5427},
+  {name:"Domlur",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9600,lon:77.6400},
+  {name:"Vijayanagar",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9700,lon:77.5370},
+  {name:"Kalyan Nagar",area:"North-East Bengaluru",type:"Area",icon:"🏘️",lat:13.0360,lon:77.6470},
+  {name:"Thubarahalli",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9620,lon:77.7300},
+  {name:"RT Nagar",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0300,lon:77.5950},
+  {name:"Banaswadi",area:"North-East Bengaluru",type:"Area",icon:"🏘️",lat:13.0200,lon:77.6600},
+  {name:"Begur Road",area:"South Bengaluru",type:"Road",icon:"🛣️",lat:12.8760,lon:77.6200},
+  {name:"Kasavanahalli",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9120,lon:77.7010},
+  {name:"Bilekahalli",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8890,lon:77.6080},
+  {name:"Malleshwaram",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:13.0034,lon:77.5653},
+  {name:"Chandapura",area:"South-East Bengaluru",type:"Area",icon:"🏘️",lat:12.8113,lon:77.7008},
+  {name:"Yelahanka New Town",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.1050,lon:77.5980},
+  {name:"Vidyaranyapura",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0660,lon:77.5630},
+  {name:"Thanisandra",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0650,lon:77.6350},
+  {name:"Hennur",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0500,lon:77.6390},
+  {name:"AECS Layout",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9750,lon:77.7100},
+  {name:"Devanahalli",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.2500,lon:77.7100},
+  {name:"Ulsoor",area:"Central Bengaluru",type:"Area",icon:"🏘️",lat:12.9838,lon:77.6215},
+  {name:"Chandapura Anekal Road",area:"South-East Bengaluru",type:"Road",icon:"🛣️",lat:12.8050,lon:77.7100},
+  {name:"Kadubeesanahalli",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9478,lon:77.7109},
+  {name:"Begur",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8640,lon:77.6250},
+  {name:"Marathahalli ORR",area:"East Bengaluru",type:"Road",icon:"🛣️",lat:12.9550,lon:77.7020},
+  {name:"Doddaballapur Road",area:"North Bengaluru",type:"Road",icon:"🛣️",lat:13.1200,lon:77.5650},
+  {name:"Jalahalli West",area:"North-West Bengaluru",type:"Area",icon:"🏘️",lat:13.0480,lon:77.5220},
+  {name:"Mysore Road",area:"West Bengaluru",type:"Road",icon:"🛣️",lat:12.9542,lon:77.5310},
+  {name:"Sahakara Nagar",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0530,lon:77.5880},
+  {name:"Jakkur",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0800,lon:77.6050},
+  {name:"Bellandur Outer Ring Road",area:"East Bengaluru",type:"Road",icon:"🛣️",lat:12.9256,lon:77.6784},
+  {name:"Basaveshwara Nagar",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9950,lon:77.5450},
+  {name:"Murugeshpalya",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9649,lon:77.6504},
+  {name:"Uttarahalli",area:"South-West Bengaluru",type:"Area",icon:"🏘️",lat:12.8900,lon:77.5480},
+  {name:"HSR Layout Sector 2",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9116,lon:77.6389},
+  {name:"Munnekollal",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9440,lon:77.6840},
+  {name:"JP Nagar Phase 8",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8980,lon:77.5810},
+  {name:"Basavanagudi",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9417,lon:77.5751},
+  {name:"JP Nagar Phase 7",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9010,lon:77.5840},
+  {name:"Tumkur Road",area:"North Bengaluru",type:"Road",icon:"🛣️",lat:13.0235,lon:77.5406},
+  {name:"Ejipura",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9450,lon:77.6280},
+  {name:"Nagarbhavi",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9570,lon:77.5150},
+  {name:"Singasandra",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8870,lon:77.6280},
+  {name:"Mathikere",area:"North-West Bengaluru",type:"Area",icon:"🏘️",lat:13.0250,lon:77.5580},
+  {name:"Kudlu Gate",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9004,lon:77.6418},
+  {name:"Hoskote",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:13.0712,lon:77.7984},
+  {name:"Jigani",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.7928,lon:77.6298},
+  {name:"Sarjapur Attibele Road",area:"South-East Bengaluru",type:"Road",icon:"🛣️",lat:12.8500,lon:77.7500},
+  {name:"Kaikondrahalli",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9244,lon:77.6908},
+  {name:"Arekere",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8780,lon:77.6180},
+  {name:"HSR Layout Sector 1",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9230,lon:77.6389},
+  {name:"TC Palya Road",area:"East Bengaluru",type:"Road",icon:"🛣️",lat:13.0100,lon:77.6750},
+  {name:"Whitefield Road",area:"East Bengaluru",type:"Road",icon:"🛣️",lat:12.9698,lon:77.7499},
+  {name:"Shigehalli",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9760,lon:77.5150},
+  {name:"Sanjay Nagar",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0150,lon:77.5850},
+  {name:"ITPL Road",area:"East Bengaluru",type:"Road",icon:"🛣️",lat:12.9698,lon:77.7499},
+  {name:"Kammanahalli",area:"North-East Bengaluru",type:"Area",icon:"🏘️",lat:13.0150,lon:77.6500},
+  {name:"New Thippasandra",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9899,lon:77.6604},
+  {name:"HRBR Layout",area:"North-East Bengaluru",type:"Area",icon:"🏘️",lat:13.0350,lon:77.6450},
+  {name:"Kodigehalli",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0530,lon:77.6060},
+  {name:"Chansandra",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:13.0300,lon:77.7100},
+  {name:"Kengeri",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9100,lon:77.4830},
+  {name:"Gunjur",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9128,lon:77.7470},
+  {name:"Nagavara",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0480,lon:77.6230},
+  {name:"Babusa Palya",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0200,lon:77.6050},
+  {name:"Hulimavu",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8730,lon:77.5980},
+  {name:"Tavarekere-BTM",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9050,lon:77.6100},
+  {name:"Wilson Garden",area:"Central Bengaluru",type:"Area",icon:"🏘️",lat:12.9530,lon:77.5980},
+  {name:"Frazer Town",area:"North-East Bengaluru",type:"Area",icon:"🏘️",lat:13.0000,lon:77.6167},
+  {name:"HSR Layout Sector 3",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9116,lon:77.6389},
+  {name:"HSR Layout Sector 7",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9116,lon:77.6389},
+  {name:"JP Nagar Phase 5",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9040,lon:77.5850},
+  {name:"Outer Ring Road",area:"Bengaluru",type:"Road",icon:"🛣️",lat:12.9352,lon:77.6890},
+  {name:"JP Nagar Phase 6",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9020,lon:77.5845},
+  {name:"Nelamangala",area:"North-West Bengaluru",type:"Area",icon:"🏘️",lat:13.1003,lon:77.3939},
+  {name:"Richmond Town",area:"Central Bengaluru",type:"Area",icon:"🏘️",lat:12.9630,lon:77.6013},
+  {name:"Bommasandra",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8330,lon:77.6700},
+  {name:"Banashankari 3rd Stage",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9220,lon:77.5630},
+  {name:"BEML Layout",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9091,lon:77.5098},
+  {name:"MS Palya",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0300,lon:77.5780},
+  {name:"Kodihalli",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9640,lon:77.6500},
+  {name:"Pai Layout",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:13.0069,lon:77.6570},
+  {name:"Gottigere",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8530,lon:77.6060},
+  {name:"Cooke Town",area:"North-East Bengaluru",type:"Area",icon:"🏘️",lat:13.0050,lon:77.6200},
+  {name:"Kumaraswamy Layout",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9050,lon:77.5700},
+  {name:"Seegehalli",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9900,lon:77.7400},
+  {name:"GM Palya",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9640,lon:77.6600},
+  {name:"Devarachikkanahalli",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8990,lon:77.6390},
+  {name:"Malleshpalya",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9649,lon:77.6504},
+  {name:"Magadi Road",area:"West Bengaluru",type:"Road",icon:"🛣️",lat:12.9650,lon:77.5350},
+  {name:"Attibele",area:"South-East Bengaluru",type:"Area",icon:"🏘️",lat:12.7780,lon:77.7700},
+  {name:"Anjanapura",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8600,lon:77.5700},
+  {name:"Kalkere",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:13.0200,lon:77.7050},
+  {name:"Kengeri Satellite Town",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9050,lon:77.4800},
+  {name:"Vignana Nagar",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9780,lon:77.6700},
+  {name:"Padmanabha Nagar",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9290,lon:77.5600},
+  {name:"RMV 2nd Stage",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0200,lon:77.5880},
+  {name:"Cox Town",area:"North-East Bengaluru",type:"Area",icon:"🏘️",lat:13.0050,lon:77.6200},
+  {name:"B Narayanapura",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:13.0100,lon:77.6800},
+  {name:"Benson Town",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0050,lon:77.5980},
+  {name:"Akshayanagar",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8810,lon:77.6270},
+  {name:"Victoria Layout",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9580,lon:77.6380},
+  {name:"Kodichikkanahalli",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8880,lon:77.6380},
+  {name:"Basavanagar",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9860,lon:77.6730},
+  {name:"Dommasandra",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.8880,lon:77.7700},
+  {name:"Varthur Road",area:"East Bengaluru",type:"Road",icon:"🛣️",lat:12.9500,lon:77.7250},
+  {name:"Lingarajapuram",area:"North-East Bengaluru",type:"Area",icon:"🏘️",lat:13.0010,lon:77.6330},
+  {name:"Mahalakshmi Layout",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:13.0050,lon:77.5600},
+  {name:"Silk Board",area:"South Bengaluru",type:"Junction",icon:"🔀",lat:12.9175,lon:77.6229},
+  {name:"JP Nagar Phase 9",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8950,lon:77.5800},
+  {name:"Nagondanahalli",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9800,lon:77.7350},
+  {name:"Anekal",area:"South-East Bengaluru",type:"Area",icon:"🏘️",lat:12.7108,lon:77.6954},
+  {name:"Yemalur",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9520,lon:77.6600},
+  {name:"Hebbal Kempapura",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0530,lon:77.5900},
+  {name:"Kothanur",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.1000,lon:77.6100},
+  {name:"JP Nagar Phase 1",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9150,lon:77.5900},
+  {name:"Bagaluru",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.1500,lon:77.6600},
+  {name:"Shanthi Nagar",area:"Central Bengaluru",type:"Area",icon:"🏘️",lat:12.9630,lon:77.5980},
+  {name:"Basapura",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8600,lon:77.6200},
+  {name:"Maruthi Sevanagar",area:"North-East Bengaluru",type:"Area",icon:"🏘️",lat:13.0100,lon:77.6500},
+  {name:"Doddakannalli",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9100,lon:77.7300},
+  {name:"HAL Layout",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9648,lon:77.6647},
+  {name:"JP Nagar Phase 2",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9130,lon:77.5880},
+  {name:"Horamavu Agara",area:"North-East Bengaluru",type:"Area",icon:"🏘️",lat:13.0350,lon:77.6600},
+  {name:"OMBR Layout",area:"North-East Bengaluru",type:"Area",icon:"🏘️",lat:13.0350,lon:77.6500},
+  {name:"Aavalahalli",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9900,lon:77.7200},
+  {name:"Bannerghatta",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8012,lon:77.5763},
+  {name:"Vasanth Nagar",area:"Central Bengaluru",type:"Area",icon:"🏘️",lat:13.0000,lon:77.5900},
+  {name:"Battarahalli",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:13.0200,lon:77.7200},
+  {name:"Kudlu",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8940,lon:77.6370},
+  {name:"Kathriguppe",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9370,lon:77.5620},
+  {name:"Thavarekere-Magadi Road",area:"West Bengaluru",type:"Road",icon:"🛣️",lat:12.9350,lon:77.5150},
+  {name:"Bhoganhalli",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9540,lon:77.6800},
+  {name:"Jeevanbheema Nagar",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9840,lon:77.6740},
+  {name:"Hanumantha Nagar",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9450,lon:77.5760},
+  {name:"Hegde Nagar",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0700,lon:77.6350},
+  {name:"Amrutha Halli",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0430,lon:77.5780},
+  {name:"MG Road",area:"Central Bengaluru",type:"Road",icon:"🛣️",lat:12.9756,lon:77.6099},
+  {name:"Devanahalli Road",area:"North Bengaluru",type:"Road",icon:"🛣️",lat:13.1200,lon:77.6500},
+  {name:"IVC Road",area:"North Bengaluru",type:"Road",icon:"🛣️",lat:13.1700,lon:77.6200},
+  {name:"Margondanahalli",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:13.0200,lon:77.7400},
+  {name:"Dasarahalli Hebbal",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0550,lon:77.5700},
+  {name:"Srinivasa Nagar",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9700,lon:77.5350},
+  {name:"Kaval Byrasandra",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0350,lon:77.5950},
+  {name:"Abbigere",area:"North-West Bengaluru",type:"Area",icon:"🏘️",lat:13.0800,lon:77.5050},
+  {name:"Kanaka Nagar",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0450,lon:77.5950},
+  {name:"Rachenahalli",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0800,lon:77.6200},
+  {name:"Adugodi",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9378,lon:77.6170},
+  {name:"Chandra Layout",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9700,lon:77.5300},
+  {name:"LB Shastri Nagar",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9649,lon:77.6600},
+  {name:"Chikka Banaswadi",area:"North-East Bengaluru",type:"Area",icon:"🏘️",lat:13.0300,lon:77.6600},
+  {name:"Bennigana Halli",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9750,lon:77.6700},
+  {name:"New BEL Road",area:"North Bengaluru",type:"Road",icon:"🛣️",lat:13.0280,lon:77.5600},
+  {name:"Belathur",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:13.0050,lon:77.7400},
+  {name:"Girinagar",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9300,lon:77.5600},
+  {name:"Ganga Nagar",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0380,lon:77.5780},
+  {name:"Hoskote Malur Road",area:"East Bengaluru",type:"Road",icon:"🛣️",lat:13.0800,lon:77.8400},
+  {name:"Kogilu",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0900,lon:77.6100},
+  {name:"Hongasandra",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8970,lon:77.6120},
+  {name:"International Airport Road",area:"North Bengaluru",type:"Road",icon:"🛣️",lat:13.1500,lon:77.6500},
+  {name:"Konanakunte",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8900,lon:77.5600},
+  {name:"Doddathoguru",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8700,lon:77.6350},
+  {name:"Wind Tunnel Road",area:"East Bengaluru",type:"Road",icon:"🛣️",lat:12.9648,lon:77.6647},
+  {name:"Panduranga Nagar",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8900,lon:77.5700},
+  {name:"Chinnapanna Halli",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9800,lon:77.7000},
+  {name:"Shivaji Nagar",area:"Central Bengaluru",type:"Area",icon:"🏘️",lat:12.9866,lon:77.6001},
+  {name:"ISRO Layout",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9050,lon:77.5700},
+  {name:"Madiwala",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9210,lon:77.6239},
+  {name:"Siddapura",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9300,lon:77.7000},
+  {name:"Peenya",area:"North-West Bengaluru",type:"Area",icon:"🏘️",lat:13.0280,lon:77.5230},
+  {name:"Chamarajpet",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9613,lon:77.5735},
+  {name:"Sadashiva Nagar",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0100,lon:77.5780},
+  {name:"Nandini Layout",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9900,lon:77.5400},
+  {name:"Bellary Road",area:"North Bengaluru",type:"Road",icon:"🛣️",lat:13.0694,lon:77.5897},
+  {name:"Mico Layout",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9100,lon:77.6100},
+  {name:"Vijaya Bank Colony",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9849,lon:77.6700},
+  {name:"HSR Layout Sector 5",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9116,lon:77.6389},
+  {name:"Seshadripuram",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0050,lon:77.5700},
+  {name:"Ananth Nagar",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9300,lon:77.5050},
+  {name:"Richmond Road",area:"Central Bengaluru",type:"Road",icon:"🛣️",lat:12.9630,lon:77.6013},
+  {name:"Garvebhavi Palya",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9100,lon:77.6350},
+  {name:"Immadihalli",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9700,lon:77.7400},
+  {name:"Srinagar",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9700,lon:77.5300},
+  {name:"Sompura",area:"South-East Bengaluru",type:"Area",icon:"🏘️",lat:12.8200,lon:77.7500},
+  {name:"Jakkasandra",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9210,lon:77.6300},
+  {name:"Chikkalasandra",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9060,lon:77.5770},
+  {name:"Jayamahal",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0050,lon:77.5980},
+  {name:"Dollars Colony",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0400,lon:77.5800},
+  {name:"Kempapura",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0500,lon:77.5900},
+  {name:"Dodda Banasvadi",area:"North-East Bengaluru",type:"Area",icon:"🏘️",lat:13.0380,lon:77.6500},
+  {name:"Nandi Hills",area:"North Bengaluru",type:"Landmark",icon:"⛰️",lat:13.3715,lon:77.6833},
+  {name:"Choodasandra",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9150,lon:77.7100},
+  {name:"Majestic",area:"Central Bengaluru",type:"Area",icon:"🏘️",lat:12.9775,lon:77.5713},
+  {name:"Cambridge Layout",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9780,lon:77.6500},
+  {name:"Kammasandra",area:"South-East Bengaluru",type:"Area",icon:"🏘️",lat:12.8350,lon:77.7300},
+  {name:"Hesaraghatta",area:"North-West Bengaluru",type:"Area",icon:"🏘️",lat:13.1400,lon:77.4800},
+  {name:"Roopena Agrahara",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8910,lon:77.6380},
+  {name:"Rajanukunte",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.1200,lon:77.5500},
+  {name:"Jakkuru Layout",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0800,lon:77.6000},
+  {name:"RMV Extension",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0200,lon:77.5900},
+  {name:"T Dasarahalli",area:"North-West Bengaluru",type:"Area",icon:"🏘️",lat:13.0450,lon:77.5200},
+  {name:"HSR Layout Sector 6",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9116,lon:77.6389},
+  {name:"JP Nagar Phase 4",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9060,lon:77.5860},
+  {name:"Lavelle Road",area:"Central Bengaluru",type:"Road",icon:"🛣️",lat:12.9683,lon:77.5980},
+  {name:"Maruthi Nagar",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9650,lon:77.5350},
+  {name:"Budigere Road",area:"East Bengaluru",type:"Road",icon:"🛣️",lat:13.0570,lon:77.7690},
+  {name:"Nagasandra",area:"North-West Bengaluru",type:"Area",icon:"🏘️",lat:13.0500,lon:77.5200},
+  {name:"Ramagondanahalli",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9940,lon:77.7350},
+  {name:"Chikbanavara",area:"North-West Bengaluru",type:"Area",icon:"🏘️",lat:13.0750,lon:77.5050},
+  {name:"Infantry Road",area:"Central Bengaluru",type:"Road",icon:"🛣️",lat:12.9900,lon:77.5980},
+  {name:"Jalahalli Cross",area:"North-West Bengaluru",type:"Area",icon:"🏘️",lat:13.0400,lon:77.5300},
+  {name:"Byrathi",area:"North-East Bengaluru",type:"Area",icon:"🏘️",lat:13.0700,lon:77.6550},
+  {name:"Jagadish Nagar",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9750,lon:77.6800},
+  {name:"Hosakerehalli",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9250,lon:77.5550},
+  {name:"Subramanyapura",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9100,lon:77.5400},
+  {name:"Neeladri Nagar",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9200,lon:77.5050},
+  {name:"Sampangi Rama Nagar",area:"Central Bengaluru",type:"Area",icon:"🏘️",lat:12.9650,lon:77.5900},
+  {name:"NRI Layout",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:13.0200,lon:77.7100},
+  {name:"Rayasandra",area:"South-East Bengaluru",type:"Area",icon:"🏘️",lat:12.8400,lon:77.7200},
+  {name:"Laggere",area:"North-West Bengaluru",type:"Area",icon:"🏘️",lat:13.0050,lon:77.5250},
+  {name:"Srirampura",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0200,lon:77.5700},
+  {name:"Venkatapura",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9580,lon:77.6550},
+  {name:"R.K. Hegde Nagar",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0800,lon:77.6400},
+  {name:"Langford Town",area:"Central Bengaluru",type:"Area",icon:"🏘️",lat:12.9600,lon:77.5960},
+  {name:"Viveka Nagar",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9500,lon:77.6350},
+  {name:"Uttarahalli Main Road",area:"South-West Bengaluru",type:"Road",icon:"🛣️",lat:12.8900,lon:77.5480},
+  {name:"Chelekare",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0600,lon:77.6000},
+  {name:"Neelasandra",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9450,lon:77.6100},
+  {name:"JP Nagar Phase 3",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9090,lon:77.5870},
+  {name:"HSR Layout Sector 4",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9116,lon:77.6389},
+  {name:"Jagajeevanram Nagar",area:"North-West Bengaluru",type:"Area",icon:"🏘️",lat:13.0350,lon:77.5250},
+  {name:"RMV",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0200,lon:77.5880},
+  {name:"Carmelaram",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.8950,lon:77.7200},
+  {name:"Kartik Nagar",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9700,lon:77.6700},
+  {name:"Mallathahalli",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9700,lon:77.5150},
+  {name:"Hosapalaya",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8950,lon:77.6430},
+  {name:"Thippasandra",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9899,lon:77.6604},
+  {name:"Cunningham Road",area:"Central Bengaluru",type:"Road",icon:"🛣️",lat:12.9937,lon:77.5975},
+  {name:"Doddabommasandra",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0900,lon:77.5750},
+  {name:"Ullal",area:"North-West Bengaluru",type:"Area",icon:"🏘️",lat:13.0600,lon:77.5050},
+  {name:"Dasarahalli Main Road",area:"North-West Bengaluru",type:"Road",icon:"🛣️",lat:13.0450,lon:77.5200},
+  {name:"Vasanthapura",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8800,lon:77.5600},
+  {name:"Sudhama Nagar",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9600,lon:77.6500},
+  {name:"Richards Town",area:"North-East Bengaluru",type:"Area",icon:"🏘️",lat:13.0050,lon:77.6150},
+  {name:"Jalahalli East",area:"North-West Bengaluru",type:"Area",icon:"🏘️",lat:13.0450,lon:77.5350},
+  {name:"Kodathi",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.8850,lon:77.7450},
+  {name:"Doddaballapur",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.2950,lon:77.5340},
+  {name:"Gattahalli",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8650,lon:77.6100},
+  {name:"Balagere",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9300,lon:77.7550},
+  {name:"Kamaksipalya",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9700,lon:77.5300},
+  {name:"Chikka Tirupathi",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:13.0250,lon:77.7500},
+  {name:"Doddakallasandra",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8750,lon:77.5750},
+  {name:"Commercial Street",area:"Central Bengaluru",type:"Shopping",icon:"🛍️",lat:12.9810,lon:77.6086},
+  {name:"Bidadi",area:"South-West Bengaluru",type:"Area",icon:"🏘️",lat:12.8036,lon:77.5048},
+  {name:"Banashankari 5th Stage",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9050,lon:77.5550},
+  {name:"Kadugondanahalli",area:"North-East Bengaluru",type:"Area",icon:"🏘️",lat:13.0050,lon:77.6450},
+  {name:"Andrahalli",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9900,lon:77.5150},
+  {name:"Bagalakunte",area:"North-West Bengaluru",type:"Area",icon:"🏘️",lat:13.0600,lon:77.5150},
+  {name:"Chikkaballapur",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.4355,lon:77.7315},
+  {name:"Lal Bagh",area:"South Bengaluru",type:"Park",icon:"🌳",lat:12.9507,lon:77.5848},
+  {name:"Nagarbhavi Circle",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9570,lon:77.5150},
+  {name:"Annapurneshwari Nagar",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9700,lon:77.5150},
+  {name:"Gandhi Nagar",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9700,lon:77.6800},
+  {name:"Ashok Nagar",area:"Central Bengaluru",type:"Area",icon:"🏘️",lat:12.9700,lon:77.5900},
+  {name:"Soukya Road",area:"East Bengaluru",type:"Road",icon:"🛣️",lat:13.0200,lon:77.7600},
+  {name:"Vittal Mallya Road",area:"Central Bengaluru",type:"Road",icon:"🛣️",lat:12.9718,lon:77.5975},
+  {name:"Yelachena Halli",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8773,lon:77.5981},
+  {name:"Kamanahalli",area:"North-East Bengaluru",type:"Area",icon:"🏘️",lat:13.0200,lon:77.6500},
+  {name:"St. Johns Road",area:"Central Bengaluru",type:"Road",icon:"🛣️",lat:12.9780,lon:77.6000},
+  {name:"Cholanayakanahalli",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0600,lon:77.5900},
+  {name:"Nagadevanahalli",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9600,lon:77.5100},
+  {name:"Bidrahalli",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:13.0150,lon:77.7400},
+  {name:"Bikasipura",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9200,lon:77.5150},
+  {name:"Sunkadakatte",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9400,lon:77.5100},
+  {name:"Chikkajala",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.1700,lon:77.6200},
+  {name:"Devinagar",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0500,lon:77.5900},
+  {name:"Nayanda Halli",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9500,lon:77.5050},
+  {name:"Kalena Agrahara",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9000,lon:77.6200},
+  {name:"Kadabagere",area:"North-West Bengaluru",type:"Area",icon:"🏘️",lat:13.0700,lon:77.5050},
+  {name:"Attiguppe",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9600,lon:77.5400},
+  {name:"Bhoopasandra",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0550,lon:77.5950},
+  {name:"Bannerghatta Jigani Road",area:"South Bengaluru",type:"Road",icon:"🛣️",lat:12.8200,lon:77.6100},
+  {name:"Kacharakanahalli",area:"North-East Bengaluru",type:"Area",icon:"🏘️",lat:13.0300,lon:77.6400},
+  {name:"Maruthi Nagar Yelahanka",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.1000,lon:77.5980},
+  {name:"Byatarayanapura",area:"North Bengaluru",type:"Area",icon:"🏘️",lat:13.0700,lon:77.5800},
+  {name:"Talaghattapura",area:"South-West Bengaluru",type:"Area",icon:"🏘️",lat:12.8700,lon:77.5200},
+  {name:"Hombegowda Nagar",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.9350,lon:77.6100},
+  {name:"Rajiv Gandhi Nagar",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9500,lon:77.5200},
+  {name:"Kamala Nagar",area:"North-West Bengaluru",type:"Area",icon:"🏘️",lat:13.0450,lon:77.5350},
+  {name:"Kempegowda Nagar",area:"West Bengaluru",type:"Area",icon:"🏘️",lat:12.9700,lon:77.5450},
+  {name:"Attibele Anekal Road",area:"South-East Bengaluru",type:"Road",icon:"🛣️",lat:12.7780,lon:77.7700},
+  {name:"Kanakapura",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.5461,lon:77.4177},
+  {name:"Gubalala",area:"South Bengaluru",type:"Area",icon:"🏘️",lat:12.8700,lon:77.5750},
+  {name:"Brigade Road",area:"Central Bengaluru",type:"Road",icon:"🛣️",lat:12.9719,lon:77.6094},
+  {name:"Palace Road",area:"Central Bengaluru",type:"Road",icon:"🛣️",lat:13.0070,lon:77.5924},
+  {name:"Residency Road",area:"Central Bengaluru",type:"Road",icon:"🛣️",lat:12.9716,lon:77.6051},
+  {name:"Sankey Road",area:"North Bengaluru",type:"Road",icon:"🛣️",lat:13.0070,lon:77.5750},
+  {name:"Race Course Road",area:"Central Bengaluru",type:"Road",icon:"🛣️",lat:12.9866,lon:77.5807},
+  {name:"Millers Road",area:"Central Bengaluru",type:"Road",icon:"🛣️",lat:12.9950,lon:77.5950},
+  {name:"Chickpet",area:"Central Bengaluru",type:"Market",icon:"🛒",lat:12.9649,lon:77.5768},
+  {name:"Baiyyappanahalli",area:"East Bengaluru",type:"Area",icon:"🏘️",lat:12.9948,lon:77.6529},
+  {name:"Silk Board Junction",area:"South Bengaluru",type:"Junction",icon:"🔀",lat:12.9175,lon:77.6229},
+  {name:"MSR Nagar",area:"North-West Bengaluru",type:"Area",icon:"🏘️",lat:13.0450,lon:77.5350},
+
+  // ── UNIVERSITIES & COLLEGES ───────────────────────────────────────────────
+  {name:"Indian Institute of Science (IISc)",area:"Malleshwaram",type:"University",icon:"🎓",lat:13.0219,lon:77.5671},
+  {name:"RV College of Engineering",area:"JP Nagar",type:"Engineering College",icon:"🎓",lat:12.9232,lon:77.5011},
+  {name:"BMS College of Engineering",area:"Basavanagudi",type:"Engineering College",icon:"🎓",lat:12.9417,lon:77.5751},
+  {name:"PES University",area:"Banashankari",type:"University",icon:"🎓",lat:12.9342,lon:77.5354},
+  {name:"PES University Ring Road Campus",area:"Outer Ring Road",type:"University",icon:"🎓",lat:12.9116,lon:77.6389},
+  {name:"Christ University",area:"Hosur Road",type:"University",icon:"🎓",lat:12.9342,lon:77.6110},
+  {name:"Christ University Kengeri Campus",area:"Kengeri",type:"University",icon:"🎓",lat:12.9050,lon:77.4800},
+  {name:"Bangalore University",area:"Jnanabharathi",type:"University",icon:"🎓",lat:12.9521,lon:77.5011},
+  {name:"Visvesvaraya Technological University (VTU)",area:"Muddenahalli",type:"University",icon:"🎓",lat:13.0100,lon:77.5900},
+  {name:"NIMHANS",area:"Hosur Road",type:"University/Hospital",icon:"🎓",lat:12.9392,lon:77.5954},
+  {name:"National Law School of India University (NLSIU)",area:"Nagarbhavi",type:"University",icon:"🎓",lat:12.9570,lon:77.5150},
+  {name:"Indian Institute of Management Bangalore (IIMB)",area:"Bannerghatta Road",type:"Management Institute",icon:"🎓",lat:12.9333,lon:77.6154},
+  {name:"Jawaharlal Nehru Centre for Advanced Scientific Research (JNCASR)",area:"Jakkur",type:"University",icon:"🎓",lat:13.0800,lon:77.6050},
+  {name:"International Institute of Information Technology Bangalore (IIIT-B)",area:"Electronics City",type:"University",icon:"🎓",lat:12.8451,lon:77.6621},
+  {name:"MS Ramaiah Institute of Technology",area:"MSR Nagar",type:"Engineering College",icon:"🎓",lat:13.0244,lon:77.5615},
+  {name:"MS Ramaiah University of Applied Sciences",area:"MSR Nagar",type:"University",icon:"🎓",lat:13.0244,lon:77.5615},
+  {name:"Dayananda Sagar College of Engineering",area:"Kumaraswamy Layout",type:"Engineering College",icon:"🎓",lat:12.9150,lon:77.5650},
+  {name:"Dayananda Sagar University",area:"Kudlu Gate",type:"University",icon:"🎓",lat:12.9004,lon:77.6418},
+  {name:"Reva University",area:"Kattigenahalli",type:"University",icon:"🎓",lat:13.1200,lon:77.6200},
+  {name:"Presidency University",area:"Hebbal",type:"University",icon:"🎓",lat:13.0450,lon:77.5938},
+  {name:"CMR University",area:"Nagawara",type:"University",icon:"🎓",lat:13.0480,lon:77.6230},
+  {name:"CMR Institute of Technology",area:"Nagawara",type:"Engineering College",icon:"🎓",lat:13.0480,lon:77.6230},
+  {name:"JSS Academy of Technical Education",area:"Uttarahalli",type:"Engineering College",icon:"🎓",lat:12.9050,lon:77.5500},
+  {name:"JSS Science and Technology University",area:"Mysore Road",type:"University",icon:"🎓",lat:12.9542,lon:77.5310},
+  {name:"New Horizon College of Engineering",area:"Marathahalli",type:"Engineering College",icon:"🎓",lat:12.9591,lon:77.6972},
+  {name:"Nitte Meenakshi Institute of Technology",area:"Yelahanka",type:"Engineering College",icon:"🎓",lat:13.1005,lon:77.5963},
+  {name:"Oxford College of Engineering",area:"Bommanahalli",type:"Engineering College",icon:"🎓",lat:12.8980,lon:77.6380},
+  {name:"Acharya Institute of Technology",area:"Soladevanahalli",type:"Engineering College",icon:"🎓",lat:13.0700,lon:77.5600},
+  {name:"Acharya NRV School of Architecture",area:"Soladevanahalli",type:"College",icon:"🎓",lat:13.0700,lon:77.5600},
+  {name:"East West Institute of Technology",area:"Anjananpura",type:"Engineering College",icon:"🎓",lat:12.8600,lon:77.5700},
+  {name:"BNM Institute of Technology",area:"Banashankari",type:"Engineering College",icon:"🎓",lat:12.9350,lon:77.5670},
+  {name:"Jyothy Institute of Technology",area:"Tataguni",type:"Engineering College",icon:"🎓",lat:12.9000,lon:77.5300},
+  {name:"KS School of Engineering and Management",area:"Banashankari",type:"Engineering College",icon:"🎓",lat:12.9200,lon:77.5500},
+  {name:"Siddaganga Institute of Technology",area:"Tumkur",type:"Engineering College",icon:"🎓",lat:13.3523,lon:77.1007},
+  {name:"Sir M Visvesvaraya Institute of Technology",area:"Krishnadeveraya Nagar",type:"Engineering College",icon:"🎓",lat:13.1900,lon:77.5600},
+  {name:"Sapthagiri College of Engineering",area:"Hesaraghatta Road",type:"Engineering College",icon:"🎓",lat:13.0800,lon:77.5200},
+  {name:"Vemana Institute of Technology",area:"Koramangala",type:"Engineering College",icon:"🎓",lat:12.9279,lon:77.6271},
+  {name:"SJB Institute of Technology",area:"Kengeri",type:"Engineering College",icon:"🎓",lat:12.9300,lon:77.5050},
+  {name:"Sambhram Institute of Technology",area:"Jalahalli",type:"Engineering College",icon:"🎓",lat:13.0450,lon:77.5300},
+  {name:"RR Institute of Technology",area:"Chikkabanavara",type:"Engineering College",icon:"🎓",lat:13.0750,lon:77.5050},
+  {name:"Atria Institute of Technology",area:"Anand Nagar",type:"Engineering College",icon:"🎓",lat:13.0200,lon:77.5900},
+  {name:"Don Bosco Institute of Technology",area:"Mysore Road",type:"Engineering College",icon:"🎓",lat:12.9350,lon:77.5250},
+  {name:"Bangalore Institute of Technology (BIT)",area:"VV Puram",type:"Engineering College",icon:"🎓",lat:12.9500,lon:77.5700},
+  {name:"Global Academy of Technology",area:"Ideal Homes Township",type:"Engineering College",icon:"🎓",lat:12.9350,lon:77.5050},
+  {name:"Presidency College",area:"Kempapura Hebbal",type:"College",icon:"🎓",lat:13.0450,lon:77.5938},
+  {name:"St. Joseph's College of Commerce",area:"Shivaji Nagar",type:"College",icon:"🎓",lat:12.9866,lon:77.6001},
+  {name:"St. Joseph's University",area:"Langford Road",type:"University",icon:"🎓",lat:12.9600,lon:77.5960},
+  {name:"Mount Carmel College",area:"Vasanth Nagar",type:"College",icon:"🎓",lat:13.0000,lon:77.5900},
+  {name:"Jain University",area:"JC Road",type:"University",icon:"🎓",lat:12.9640,lon:77.5790},
+  {name:"Jain College Whitefield",area:"Whitefield",type:"College",icon:"🎓",lat:12.9698,lon:77.7499},
+  {name:"Kristu Jayanti College",area:"Kothanur",type:"College",icon:"🎓",lat:13.1000,lon:77.6100},
+  {name:"Garden City University",area:"Old Airport Road",type:"University",icon:"🎓",lat:13.0150,lon:77.6600},
+  {name:"Acharya Bangalore Business School",area:"Soladevanahalli",type:"Business School",icon:"🎓",lat:13.0700,lon:77.5600},
+  {name:"Alliance University",area:"Chandapura",type:"University",icon:"🎓",lat:12.8113,lon:77.7008},
+  {name:"Bangalore Medical College and Research Institute",area:"Fort",type:"Medical College",icon:"🏥",lat:12.9713,lon:77.5756},
+  {name:"Kempegowda Institute of Medical Sciences (KIMS)",area:"VV Puram",type:"Medical College",icon:"🏥",lat:12.9450,lon:77.5700},
+  {name:"MS Ramaiah Medical College",area:"MSR Nagar",type:"Medical College",icon:"🏥",lat:13.0244,lon:77.5615},
+  {name:"St. John's Medical College",area:"Sarjapur Road",type:"Medical College",icon:"🏥",lat:12.9279,lon:77.6271},
+  {name:"RajaRajeswari Medical College",area:"Kambipura",type:"Medical College",icon:"🏥",lat:12.9200,lon:77.5000},
+  {name:"Vydehi Institute of Medical Sciences",area:"Whitefield",type:"Medical College",icon:"🏥",lat:12.9698,lon:77.7499},
+  {name:"Sapthagiri Institute of Medical Sciences",area:"Hesaraghatta Road",type:"Medical College",icon:"🏥",lat:13.0800,lon:77.5200},
+  {name:"Indian Academy Degree College",area:"Hennur Road",type:"College",icon:"🎓",lat:13.0337,lon:77.6374},
+  {name:"New Horizon Gurukul School",area:"Marathahalli",type:"School",icon:"🏫",lat:12.9591,lon:77.6972},
+  {name:"Baldwin Boys High School",area:"Shivaji Nagar",type:"School",icon:"🏫",lat:12.9866,lon:77.6001},
+  {name:"Bishop Cotton Boys School",area:"St. Mark's Road",type:"School",icon:"🏫",lat:12.9750,lon:77.5960},
+  {name:"National Public School Koramangala",area:"Koramangala",type:"School",icon:"🏫",lat:12.9279,lon:77.6271},
+  {name:"National Public School Indiranagar",area:"Indiranagar",type:"School",icon:"🏫",lat:12.9784,lon:77.6408},
+  {name:"Indian Institute of Plantation Management",area:"Jnana Bharathi Campus",type:"Management Institute",icon:"🎓",lat:12.9521,lon:77.5011},
+  {name:"Xavier Institute of Management and Entrepreneurship",area:"Electronics City",type:"Management Institute",icon:"🎓",lat:12.8399,lon:77.6770},
+  {name:"Symbiosis Institute of Business Management",area:"Hosur Road",type:"Management Institute",icon:"🎓",lat:12.8965,lon:77.6393},
+  {name:"IFIM Business School",area:"Electronics City",type:"Business School",icon:"🎓",lat:12.8399,lon:77.6770},
+  {name:"Indus Business Academy",area:"Kanakapura Road",type:"Business School",icon:"🎓",lat:12.8977,lon:77.5534},
+  {name:"Manipal Academy of Higher Education",area:"HAL Airport Road",type:"University",icon:"🎓",lat:12.9592,lon:77.6473},
+  {name:"ISBR Business School",area:"Electronics City",type:"Business School",icon:"🎓",lat:12.8399,lon:77.6770},
+  {name:"Brindavan College",area:"Hebbal",type:"College",icon:"🎓",lat:13.0450,lon:77.5938},
+  {name:"Seshadripuram College",area:"Seshadripuram",type:"College",icon:"🎓",lat:13.0050,lon:77.5700},
+  {name:"Vijaya College",area:"Jayanagar",type:"College",icon:"🎓",lat:12.9308,lon:77.5836},
+  {name:"BGS College",area:"Rajajinagar",type:"College",icon:"🎓",lat:12.9936,lon:77.5497},
+  {name:"Surana College",area:"Jayanagar",type:"College",icon:"🎓",lat:12.9308,lon:77.5836},
+  {name:"Maharani's Arts and Commerce College for Women",area:"JC Road",type:"College",icon:"🎓",lat:12.9640,lon:77.5790},
+  {name:"University Visvesvaraya College of Engineering (UVCE)",area:"KR Circle",type:"Engineering College",icon:"🎓",lat:12.9716,lon:77.5940},
+  {name:"PESIT South Campus",area:"Banashankari",type:"Engineering College",icon:"🎓",lat:12.9350,lon:77.5670},
+  {name:"RNS Institute of Technology",area:"Channasandra",type:"Engineering College",icon:"🎓",lat:12.9250,lon:77.5050},
+  {name:"Govt Science College",area:"Nrupathunga Road",type:"College",icon:"🎓",lat:12.9750,lon:77.5850},
+  {name:"Ambedkar Institute of Technology",area:"Mallathahalli",type:"Engineering College",icon:"🎓",lat:12.9700,lon:77.5150},
+  {name:"RVIM",area:"JP Nagar",type:"Management Institute",icon:"🎓",lat:12.9063,lon:77.5857},
+  {name:"School of Business and Management Christ University",area:"Hosur Road",type:"Business School",icon:"🎓",lat:12.9342,lon:77.6110},
+  {name:"Maulana Azad National Urdu University",area:"Jalahalli",type:"University",icon:"🎓",lat:13.0450,lon:77.5300},
+  {name:"Centre for Public Policy (IIM-B)",area:"Bannerghatta Road",type:"Research Institute",icon:"🎓",lat:12.9333,lon:77.6154},
+  {name:"Defence Research and Development Organisation (DRDO)",area:"CV Raman Nagar",type:"Research Institute",icon:"🔬",lat:12.9849,lon:77.6618},
+  {name:"HAL Aerospace Museum",area:"HAL Airport Road",type:"Landmark",icon:"✈️",lat:12.9648,lon:77.6647},
+
+  // ── TOURIST & FAMOUS PLACES ──────────────────────────────────────────────────
+  {name:"Lalbagh Botanical Garden",area:"South Bengaluru",type:"Tourist",icon:"🌳",lat:12.9507,lon:77.5848},
+  {name:"Cubbon Park",area:"Central Bengaluru",type:"Tourist",icon:"🌳",lat:12.9793,lon:77.5929},
+  {name:"Vidhana Soudha",area:"Central Bengaluru",type:"Landmark",icon:"🏛️",lat:12.9791,lon:77.5929},
+  {name:"Bangalore Palace",area:"Vasanth Nagar",type:"Tourist",icon:"🏰",lat:13.0070,lon:77.5924},
+  {name:"ISKCON Temple",area:"Rajajinagar",type:"Temple",icon:"🛕",lat:13.0096,lon:77.5512},
+  {name:"Bull Temple (Dodda Ganesha)",area:"Basavanagudi",type:"Temple",icon:"🛕",lat:12.9417,lon:77.5751},
+  {name:"Tipu Sultan's Summer Palace",area:"Chamrajpet",type:"Tourist",icon:"🏯",lat:12.9613,lon:77.5735},
+  {name:"Bangalore Fort",area:"Chamrajpet",type:"Landmark",icon:"🏯",lat:12.9613,lon:77.5735},
+  {name:"Bannerghatta National Park",area:"South Bengaluru",type:"Park",icon:"🦁",lat:12.8012,lon:77.5763},
+  {name:"UB City Mall",area:"Vittal Mallya Road",type:"Mall",icon:"🛍️",lat:12.9718,lon:77.5975},
+  {name:"Forum Mall",area:"Koramangala",type:"Mall",icon:"🛍️",lat:12.9342,lon:77.6110},
+  {name:"Phoenix Marketcity",area:"Whitefield",type:"Mall",icon:"🛍️",lat:12.9699,lon:77.7011},
+  {name:"Orion Mall",area:"Rajajinagar",type:"Mall",icon:"🛍️",lat:13.0050,lon:77.5543},
+  {name:"Mantri Square Mall",area:"Malleshwaram",type:"Mall",icon:"🛍️",lat:13.0034,lon:77.5653},
+  {name:"Garuda Mall",area:"Magrath Road",type:"Mall",icon:"🛍️",lat:12.9671,lon:77.6064},
+  {name:"Royal Meenakshi Mall",area:"Bannerghatta Road",type:"Mall",icon:"🛍️",lat:12.8650,lon:77.5970},
+  {name:"Ulsoor Lake",area:"Ulsoor",type:"Tourist",icon:"🌊",lat:12.9838,lon:77.6215},
+  {name:"Sankey Tank",area:"Sadashiva Nagar",type:"Tourist",icon:"🌊",lat:13.0070,lon:77.5780},
+  {name:"Hebbal Lake",area:"Hebbal",type:"Tourist",icon:"🌊",lat:13.0500,lon:77.5900},
+  {name:"Agara Lake",area:"HSR Layout",type:"Tourist",icon:"🌊",lat:12.9116,lon:77.6389},
+  {name:"Nandi Hills",area:"North Bengaluru",type:"Tourist",icon:"⛰️",lat:13.3715,lon:77.6833},
+  {name:"Wonderla Amusement Park",area:"Mysore Road",type:"Tourist",icon:"🎡",lat:12.8316,lon:77.5041},
+  {name:"HAL Aerospace Museum",area:"Old Airport Road",type:"Museum",icon:"✈️",lat:12.9648,lon:77.6647},
+  {name:"Visvesvaraya Industrial & Technological Museum",area:"Cubbon Park",type:"Museum",icon:"🏭",lat:12.9793,lon:77.5929},
+  {name:"Government Museum",area:"Cubbon Park",type:"Museum",icon:"🏛️",lat:12.9793,lon:77.5929},
+  {name:"National Gallery of Modern Art",area:"Manikyavelu Mansion",type:"Museum",icon:"🖼️",lat:12.9793,lon:77.5929},
+  {name:"Jawaharlal Nehru Planetarium",area:"Vasanth Nagar",type:"Museum",icon:"🔭",lat:12.9991,lon:77.5720},
+  {name:"Attara Kacheri (High Court)",area:"Central Bengaluru",type:"Landmark",icon:"🏛️",lat:12.9791,lon:77.5929},
+  {name:"Mayo Hall",area:"Central Bengaluru",type:"Landmark",icon:"🏛️",lat:12.9750,lon:77.6000},
+  {name:"General Post Office (GPO)",area:"Raj Bhavan Road",type:"Landmark",icon:"📮",lat:12.9780,lon:77.5850},
+  {name:"Raj Bhavan Bengaluru",area:"Vasanth Nagar",type:"Landmark",icon:"🏛️",lat:13.0070,lon:77.5820},
+  {name:"Town Hall",area:"Central Bengaluru",type:"Landmark",icon:"🏛️",lat:12.9750,lon:77.5860},
+  {name:"Commercial Street",area:"Central Bengaluru",type:"Shopping",icon:"🛍️",lat:12.9810,lon:77.6086},
+  {name:"Brigade Road",area:"Central Bengaluru",type:"Shopping",icon:"🛍️",lat:12.9719,lon:77.6094},
+  {name:"Church Street",area:"Central Bengaluru",type:"Street",icon:"⛪",lat:12.9746,lon:77.6076},
+  {name:"MG Road",area:"Central Bengaluru",type:"Street",icon:"🛣️",lat:12.9756,lon:77.6099},
+  {name:"KR Market (City Market)",area:"South Bengaluru",type:"Market",icon:"🛒",lat:12.9649,lon:77.5768},
+  {name:"Russell Market",area:"Shivaji Nagar",type:"Market",icon:"🛒",lat:12.9900,lon:77.6050},
+  {name:"Chickpet",area:"Old Bengaluru",type:"Market",icon:"🛒",lat:12.9649,lon:77.5768},
+  {name:"Jayanagar Shopping Complex",area:"Jayanagar",type:"Market",icon:"🛒",lat:12.9308,lon:77.5836},
+  {name:"Freedom Park",area:"Sheshadri Road",type:"Park",icon:"🌿",lat:12.9771,lon:77.5765},
+  {name:"Indira Gandhi Musical Fountain Park",area:"Raj Bhavan Road",type:"Park",icon:"⛲",lat:12.9880,lon:77.5820},
+  {name:"St. Mary's Basilica",area:"Shivaji Nagar",type:"Church",icon:"⛪",lat:12.9796,lon:77.6022},
+  {name:"St. Mark's Cathedral",area:"MG Road",type:"Church",icon:"⛪",lat:12.9750,lon:77.5960},
+  {name:"St. Andrew's Kirk",area:"Cubbon Park Road",type:"Church",icon:"⛪",lat:12.9770,lon:77.5920},
+  {name:"Jama Masjid",area:"Old Bengaluru",type:"Mosque",icon:"🕌",lat:12.9649,lon:77.5768},
+  {name:"Jumma Masjid",area:"Shivaji Nagar",type:"Mosque",icon:"🕌",lat:12.9866,lon:77.6001},
+  {name:"Gavi Gangadhareshwara Cave Temple",area:"Gavipuram",type:"Temple",icon:"🛕",lat:12.9417,lon:77.5751},
+  {name:"Banashankari Amma Temple",area:"Banashankari",type:"Temple",icon:"🛕",lat:12.9263,lon:77.5670},
+  {name:"Kadu Malleshwara Temple",area:"Malleshwaram",type:"Temple",icon:"🛕",lat:13.0034,lon:77.5653},
+  {name:"Ragi Gudda Anjaneya Temple",area:"JP Nagar",type:"Temple",icon:"🛕",lat:12.9200,lon:77.5800},
+  {name:"Sri Venkateshwara Temple",area:"Rajajinagar",type:"Temple",icon:"🛕",lat:12.9936,lon:77.5497},
+  {name:"Innovative Film City",area:"Bidadi",type:"Tourist",icon:"🎬",lat:12.9400,lon:77.4600},
+  {name:"Jurney (Pub Street)",area:"Indiranagar",type:"Nightlife",icon:"🍸",lat:12.9784,lon:77.6408},
+  {name:"Toit Brewpub",area:"Indiranagar",type:"Restaurant",icon:"🍺",lat:12.9784,lon:77.6408},
+  {name:"MTR (Mavalli Tiffin Room)",area:"Lalbagh Road",type:"Restaurant",icon:"🍽️",lat:12.9458,lon:77.5750},
+  {name:"Vidyarthi Bhavan",area:"Gandhi Bazaar",type:"Restaurant",icon:"🍽️",lat:12.9417,lon:77.5751},
+  {name:"Koshy's Restaurant",area:"St. Mark's Road",type:"Restaurant",icon:"🍽️",lat:12.9750,lon:77.5960},
+  {name:"Truffles (Koramangala)",area:"Koramangala",type:"Restaurant",icon:"🍔",lat:12.9279,lon:77.6271},
+  {name:"Hard Rock Cafe Bengaluru",area:"MG Road",type:"Restaurant",icon:"🎸",lat:12.9719,lon:77.6094},
+  {name:"1522 Bar & Kitchen",area:"MG Road",type:"Nightlife",icon:"🍸",lat:12.9756,lon:77.6099},
+  {name:"Fenny's Lounge",area:"Indiranagar",type:"Nightlife",icon:"🍸",lat:12.9784,lon:77.6408},
+  {name:"High Ultra Lounge",area:"Vittal Mallya Road",type:"Nightlife",icon:"🍸",lat:12.9718,lon:77.5975},
+  {name:"PVR Orion Mall Cinema",area:"Rajajinagar",type:"Cinema",icon:"🎬",lat:13.0050,lon:77.5543},
+  {name:"INOX Garuda Mall",area:"Magrath Road",type:"Cinema",icon:"🎬",lat:12.9671,lon:77.6064},
+  {name:"PVR Forum Mall",area:"Koramangala",type:"Cinema",icon:"🎬",lat:12.9342,lon:77.6110},
+  {name:"Cinepolis Nexus Shantiniketan",area:"Whitefield",type:"Cinema",icon:"🎬",lat:12.9698,lon:77.7499},
+  {name:"Ranga Shankara Theatre",area:"JP Nagar",type:"Theatre",icon:"🎭",lat:12.9063,lon:77.5857},
+  {name:"Chowdiah Memorial Hall",area:"Malleshwaram",type:"Theatre",icon:"🎭",lat:13.0034,lon:77.5653},
+  {name:"Bengaluru International Exhibition Centre (BIEC)",area:"Tumkur Road",type:"Convention",icon:"🏟️",lat:13.0400,lon:77.5200},
+  {name:"Kanteerava Stadium",area:"Kasturba Road",type:"Stadium",icon:"🏟️",lat:12.9780,lon:77.5870},
+  {name:"Chinnaswamy Stadium (M. Chinnaswamy)",area:"MG Road",type:"Stadium",icon:"🏏",lat:12.9889,lon:77.5995},
+  {name:"Sree Kanteerava Indoor Stadium",area:"Kasturba Road",type:"Stadium",icon:"🏋️",lat:12.9780,lon:77.5870},
+  {name:"Koramangala Indoor Stadium",area:"Koramangala",type:"Stadium",icon:"🏸",lat:12.9279,lon:77.6271},
+  {name:"Kempegowda International Airport",area:"Devanahalli",type:"Airport",icon:"✈️",lat:13.1986,lon:77.7066},
+  {name:"Bengaluru City Railway Station (KSR)",area:"Majestic",type:"Railway",icon:"🚉",lat:12.9775,lon:77.5713},
+  {name:"Yeshwanthpur Junction Railway Station",area:"Yeshwanthpur",type:"Railway",icon:"🚉",lat:13.0221,lon:77.5427},
+  {name:"Krantiveera Sangolli Rayanna Railway Station",area:"Majestic",type:"Railway",icon:"🚉",lat:12.9775,lon:77.5713},
+];
+
+/* ================================================================
+   SEARCH ENGINE — fuzzy match with scoring
+   ================================================================ */
+function searchPlaces(q) {
+  if (!q || q.length < 1) return [];
+  const ql = q.toLowerCase().trim();
+  return BLORE_PLACES.map(p => {
+    const nl = p.name.toLowerCase(), al = p.area.toLowerCase(), tl = p.type.toLowerCase();
+    let score = 0;
+    if (nl === ql)           score = 100;
+    else if (nl.startsWith(ql)) score = 80;
+    else if (nl.includes(ql))   score = 60;
+    else if (al.startsWith(ql)) score = 40;
+    else if (al.includes(ql))   score = 25;
+    else if (tl.includes(ql))   score = 15;
+    else {
+      const words = ql.split(' ').filter(w => w.length > 1);
+      const matched = words.filter(w => nl.includes(w) || al.includes(w));
+      if (matched.length) score = matched.length * 15;
+    }
+    return { ...p, score };
+  }).filter(p => p.score > 0).sort((a, b) => b.score - a.score).slice(0, 8);
+}
+
+function highlightMatch(text, q) {
+  if (!q) return text;
+  const i = text.toLowerCase().indexOf(q.toLowerCase());
+  if (i === -1) return text;
+  return text.slice(0, i) + '<em>' + text.slice(i, i + q.length) + '</em>' + text.slice(i + q.length);
+}
+
+/* ================================================================
+   REAL 2025 BENGALURU FARE STRUCTURES (verified Jan 2026)
+   ================================================================ */
+/*
+  FARE SOURCES (verified Jan 2026):
+  Rapido Bike : ₹20 base + ₹3/km  (Wikipedia/official)
+  Uber Moto   : ₹35 base + ₹5/km  (dynamic, Bengaluru)
+  Ola Bike    : ₹25 base + ₹4/km  (Ola app Bengaluru)
+  Auto (govt) : ₹36 for 2 km then ₹18/km  (Karnataka Aug-2025 revision)
+  Namma Yatri : govt meter, no surge, no per-min
+  Rapido Auto : ₹30 base + ₹15/km (near govt rate)
+  Ola Auto    : ₹30 min + ₹15/km  (taxiautofare.com Jan-2026)
+  Uber Auto   : ₹30 base + ₹16/km (10% above govt rate)
+  Uber Go     : ₹42 base + ₹7.35/km + ₹1.58/min, minFare ₹53 (taxifarefinder Jan-2026)
+  Ola Mini    : ₹75 min (up to 4km) then ₹18/km (Karnataka govt hatchback slab)
+  inDrive     : negotiate-based, ~₹55 base + ₹11/km no surge
+  BluSmart    : fixed electric, ₹75 base + ₹15/km no surge
+  Ola Prime   : ₹100 min (5-10L slab) + ₹21/km
+  Uber Sedan  : ₹100 min + ₹19/km + ₹2/min
+*/
+const APP_DATA = {
+  bike: [
+    { name:'Rapido Bike', emoji:'⚡', color:'#FFE234', bg:'#1a1500', type:'Bike Taxi',
+      link:'https://rapido.bike',
+      fare:{ base:20, perKm:3,   perMin:0.5, minFare:20, surgeMax:1.2 } },
+    { name:'Uber Moto',   emoji:'🖤', color:'#ffffff', bg:'#111111', type:'Bike',
+      link:'https://m.uber.com',
+      fare:{ base:35, perKm:5,   perMin:1.0, minFare:35, surgeMax:1.5 } },
+    { name:'Ola Bike',    emoji:'🟡', color:'#4CAF50', bg:'#0a1a0a', type:'Bike',
+      link:'https://olaelectric.com',
+      fare:{ base:25, perKm:4,   perMin:0.5, minFare:25, surgeMax:1.4 } },
+    { name:'Bounce E-Bike',emoji:'🟠',color:'#ff6b35', bg:'#1a0e05', type:'E-Bike',
+      link:'https://bounce.bike',
+      fare:{ base:15, perKm:3,   perMin:0.5, minFare:15, surgeMax:1.1 } },
+  ],
+  auto: [
+    { name:'Namma Yatri', emoji:'🟢', color:'#76c442', bg:'#071a00', type:'Auto · No Surge',
+      link:'https://nammayatri.in',
+      fare:{ base:36, perKm:18,  perMin:0,   minFare:36, surgeMax:1.0 } },
+    { name:'Rapido Auto', emoji:'⚡', color:'#FFE234', bg:'#1a1500', type:'Auto',
+      link:'https://rapido.bike',
+      fare:{ base:30, perKm:15,  perMin:0.7, minFare:30, surgeMax:1.3 } },
+    { name:'Ola Auto',    emoji:'🟡', color:'#4CAF50', bg:'#0a1a0a', type:'Auto',
+      link:'https://olaelectric.com',
+      fare:{ base:30, perKm:15,  perMin:0.7, minFare:30, surgeMax:1.4 } },
+    { name:'Uber Auto',   emoji:'🖤', color:'#ffffff', bg:'#111111', type:'Auto',
+      link:'https://m.uber.com',
+      fare:{ base:30, perKm:16,  perMin:1.0, minFare:30, surgeMax:1.5 } },
+  ],
+  mini: [
+    { name:'inDrive',     emoji:'🟣', color:'#bb86fc', bg:'#0d0015', type:'Mini · Negotiate',
+      link:'https://indrive.com',
+      fare:{ base:55, perKm:11,  perMin:1.0, minFare:55, surgeMax:1.0 } },
+    { name:'Uber Go',     emoji:'🖤', color:'#ffffff', bg:'#111111', type:'Mini Car',
+      link:'https://m.uber.com',
+      fare:{ base:42, perKm:7.35,perMin:1.58,minFare:53, surgeMax:1.8 } },
+    { name:'Ola Mini',    emoji:'🟡', color:'#4CAF50', bg:'#0a1a0a', type:'Mini Car',
+      link:'https://olaelectric.com',
+      fare:{ base:75, perKm:18,  perMin:1.0, minFare:75, surgeMax:1.7 } },
+    { name:'BluSmart Go', emoji:'🔵', color:'#2196F3', bg:'#00101a', type:'Electric · No Surge',
+      link:'https://blu-smart.com',
+      fare:{ base:75, perKm:15,  perMin:1.0, minFare:75, surgeMax:1.0 } },
+  ],
+  sedan: [
+    { name:'inDrive Sedan',  emoji:'🟣', color:'#bb86fc', bg:'#0d0015', type:'Sedan · Negotiate',
+      link:'https://indrive.com',
+      fare:{ base:80,  perKm:13, perMin:1.5, minFare:80,  surgeMax:1.0 } },
+    { name:'Uber Go Sedan',  emoji:'🖤', color:'#ffffff', bg:'#111111', type:'Sedan',
+      link:'https://m.uber.com',
+      fare:{ base:100, perKm:19, perMin:2.0, minFare:100, surgeMax:2.0 } },
+    { name:'Ola Prime',      emoji:'🟡', color:'#4CAF50', bg:'#0a1a0a', type:'Sedan',
+      link:'https://olaelectric.com',
+      fare:{ base:100, perKm:21, perMin:1.5, minFare:100, surgeMax:1.8 } },
+    { name:'BluSmart Prime', emoji:'🔵', color:'#2196F3', bg:'#00101a', type:'Electric Sedan',
+      link:'https://blu-smart.com',
+      fare:{ base:110, perKm:18, perMin:1.5, minFare:110, surgeMax:1.0 } },
+  ],
+};
+
+/* ── Haversine distance ──────────────────────────────────────────────────── */
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  var sinDLat = Math.sin(dLat/2), sinDLon = Math.sin(dLon/2);
+  const a = sinDLat*sinDLat + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * sinDLon*sinDLon;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+/* ── Fare calculator (realistic 2025 Bengaluru prices) ───────────────────── */
+function getPrice(distKm, etaMin, app) {
+  const f = app.fare;
+  // Surge: no-surge apps = 1.0 always; others 75% no surge, 20% mild, 5% high
+  let surge = 1.0;
+  if (f.surgeMax > 1.0) {
+    const r = Math.random();
+    if (r > 0.95)      surge = f.surgeMax;
+    else if (r > 0.75) surge = 1 + (f.surgeMax - 1) * 0.25;
+  }
+  const raw  = f.base + distKm * f.perKm + etaMin * f.perMin;
+  const fare = Math.max(f.minFare, raw * surge);
+  return Math.round(fare / 5) * 5;
+}
+
+function getPriceRange(price) {
+  const hi = Math.round((price * 1.08) / 5) * 5;
+  return { low: price, high: hi };
+}
+
+/* ================================================================
+   AUTOCOMPLETE STATE
+   ================================================================ */
+const selectedLocations = { pickup: null, destination: null };
+let highlightIdx       = { pickup: -1, destination: -1 };
+let currentResults     = { pickup: [], destination: [] };
+let selectedType       = 'bike';
+
+/* ── Dropdown rendering ──────────────────────────────────────────────────── */
+function showDropdown(fieldId, places, query) {
+  const dd = document.getElementById(fieldId + '-dropdown');
+  dd.innerHTML = '';
+  if (!places.length) {
+    dd.innerHTML = '<div class="no-results">No places found. Try another name.</div>';
+    dd.classList.add('open');
+    return;
+  }
+  places.forEach((p, i) => {
+    const el = document.createElement('div');
+    el.className = 'suggestion-item';
+    el.innerHTML =
+      '<div class="sug-icon">' + p.icon + '</div>' +
+      '<div class="sug-text">' +
+        '<div class="sug-name">' + highlightMatch(p.name, query) + '</div>' +
+        '<div class="sug-addr">' + p.area + ', Bengaluru</div>' +
+      '</div>' +
+      '<span class="sug-type">' + p.type + '</span>';
+    el.addEventListener('mousedown', e => { e.preventDefault(); selectPlace(fieldId, p); });
+    dd.appendChild(el);
+  });
+  const ft = document.createElement('div');
+  ft.className = 'sug-footer';
+  ft.textContent = '📍 Bengaluru locations only';
+  dd.appendChild(ft);
+  dd.classList.add('open');
+  highlightIdx[fieldId] = -1;
+}
+
+function hideDropdown(id) {
+  const dd = document.getElementById(id + '-dropdown');
+  if (dd) dd.classList.remove('open');
+  highlightIdx[id] = -1;
+}
+
+function updateHighlight(fieldId) {
+  document.getElementById(fieldId + '-dropdown')
+    .querySelectorAll('.suggestion-item')
+    .forEach((el, i) => el.classList.toggle('highlighted', i === highlightIdx[fieldId]));
+}
+
+/* ── Place selection ─────────────────────────────────────────────────────── */
+function selectPlace(fieldId, place) {
+  selectedLocations[fieldId] = place;
+  document.getElementById(fieldId + '-input-wrap').style.display = 'none';
+  const pill = document.getElementById(fieldId + '-pill');
+  document.getElementById(fieldId + '-pill-text').textContent = place.name + ', ' + place.area;
+  pill.classList.add('show');
+  hideDropdown(fieldId);
+
+  // Auto-focus next field
+  if (fieldId === 'pickup') setTimeout(() => document.getElementById('destination').focus(), 80);
+
+  // Show route summary if both picked
+  updateRouteSummary();
+}
+
+function updateRouteSummary() {
+  const p = selectedLocations.pickup;
+  const d = selectedLocations.destination;
+  const summary = document.getElementById('routeSummary');
+  if (p && d) {
+    const km = Math.round(haversineKm(p.lat, p.lon, d.lat, d.lon) * 1.3 * 10) / 10;
+    const etaMin = Math.round((km / 20) * 60);
+    document.getElementById('routeSummaryText').innerHTML =
+      '<strong>' + p.name + '</strong> → <strong>' + d.name + '</strong>';
+    document.getElementById('routeDistChip').textContent = '~' + km + ' km · ' + etaMin + ' min';
+    summary.classList.add('show');
+  } else {
+    summary.classList.remove('show');
+  }
+}
+
+function clearLocation(fieldId) {
+  selectedLocations[fieldId] = null;
+  document.getElementById(fieldId).value = '';
+  document.getElementById(fieldId + '-input-wrap').style.display = '';
+  document.getElementById(fieldId + '-pill').classList.remove('show');
+  currentResults[fieldId] = [];
+  hideDropdown(fieldId);
+  updateRouteSummary();
+  document.getElementById('results').classList.remove('visible');
+  setTimeout(() => document.getElementById(fieldId).focus(), 50);
+}
+
+/* ── Autocomplete input wiring ───────────────────────────────────────────── */
+function setupAutocomplete(fieldId) {
+  const input = document.getElementById(fieldId);
+
+  input.addEventListener('input', function () {
+    const q = this.value.trim();
+    if (q.length < 1) { hideDropdown(fieldId); return; }
+    const res = searchPlaces(q);
+    currentResults[fieldId] = res;
+    showDropdown(fieldId, res, q);
+  });
+
+  input.addEventListener('keydown', function (e) {
+    const res = currentResults[fieldId];
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      highlightIdx[fieldId] = Math.min(highlightIdx[fieldId] + 1, res.length - 1);
+      updateHighlight(fieldId);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      highlightIdx[fieldId] = Math.max(highlightIdx[fieldId] - 1, 0);
+      updateHighlight(fieldId);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const hi = highlightIdx[fieldId];
+      if (hi >= 0 && res[hi]) selectPlace(fieldId, res[hi]);
+      else if (fieldId === 'destination') compareRides();
+    } else if (e.key === 'Escape') {
+      hideDropdown(fieldId);
+    }
+  });
+
+  input.addEventListener('focus', function () {
+    if (this.value.trim().length >= 1 && currentResults[fieldId].length)
+      document.getElementById(fieldId + '-dropdown').classList.add('open');
+  });
+
+  input.addEventListener('blur', function () {
+    setTimeout(() => hideDropdown(fieldId), 180);
+  });
+}
+
+setupAutocomplete('pickup');
+setupAutocomplete('destination');
+
+document.addEventListener('click', e => {
+  ['pickup', 'destination'].forEach(id => {
+    const w = document.getElementById(id + '-wrapper');
+    if (w && !w.contains(e.target)) hideDropdown(id);
+  });
+});
+
+/* ── Ride type selector ──────────────────────────────────────────────────── */
+function selectType(btn, type) {
+  document.querySelectorAll('.ride-type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedType = type;
+}
+
+/* ================================================================
+   COMPARE RIDES — main logic
+   ================================================================ */
+function compareRides() {
+  const p = selectedLocations.pickup;
+  const d = selectedLocations.destination;
+  if (!p || !d) {
+    alert('Please select both pickup and destination from the suggestions!');
+    return;
+  }
+
+  // Hide old results, show spinner
+  document.getElementById('results').classList.remove('visible');
+  document.getElementById('loading').classList.add('visible');
+  document.getElementById('compareBtn').disabled = true;
+
+  // Road distance = straight-line × 1.3 road factor
+  const distKm  = Math.round(haversineKm(p.lat, p.lon, d.lat, d.lon) * 1.3 * 10) / 10 || 1;
+  const baseEta = Math.round((distKm / 20) * 60); // 20 km/h avg city speed
+
+  setTimeout(() => {
+    document.getElementById('loading').classList.remove('visible');
+    document.getElementById('compareBtn').disabled = false;
+
+    const rides = APP_DATA[selectedType].map((app, i) => {
+      const etaMin  = Math.max(3, baseEta + [-2, -1, 1, 2][i] + Math.floor(Math.random() * 3));
+      const price   = getPrice(distKm, etaMin, app);
+      const range   = getPriceRange(price);
+      const noSurge = app.fare.surgeMax === 1.0;
+      const hasSurge = !noSurge && price > (app.fare.base + distKm * app.fare.perKm) * 1.08;
+      return { ...app, price, range, etaMin, hasSurge, noSurge };
+    }).sort((a, b) => a.price - b.price);
+
+    const savings = rides[rides.length - 1].price - rides[0].price;
+
+    document.getElementById('routeMeta').innerHTML =
+      '<strong>' + p.name + '</strong> → <strong>' + d.name + '</strong> · ~' + distKm + ' km';
+
+    document.getElementById('savingsBar').innerHTML = savings >= 10
+      ? '💡 Book <strong>' + rides[0].name + '</strong> — save up to <strong>₹' + savings + '</strong> vs most expensive'
+      : '✅ All apps are similarly priced for this route';
+
+    const list = document.getElementById('appList');
+    list.innerHTML = '';
+
+    rides.forEach((ride, i) => {
+      const best = i === 0;
+      const card = document.createElement('a');
+      card.href      = ride.link;
+      card.target    = '_blank';
+      card.rel       = 'noopener noreferrer';
+      card.className = 'app-card' + (best ? ' best' : '');
+
+      const surgeTag   = ride.hasSurge
+        ? '<span class="tag tag-surge">⚡ Surge</span>' : '';
+      const noSurgeTag = ride.noSurge
+        ? '<span class="tag tag-nosurge">✓ No Surge</span>' : '';
+      const typeTag    = '<span class="tag tag-type">' + ride.type + '</span>';
+
+      card.innerHTML =
+        (best ? '<div class="best-tag">Best Deal</div>' : '') +
+        '<div class="app-logo" style="background:' + ride.bg + ';border:1px solid ' + ride.color + '30">' + ride.emoji + '</div>' +
+        '<div class="app-info">' +
+          '<div class="app-name">' + ride.name + surgeTag + noSurgeTag + '</div>' +
+          '<div class="app-sub">~' + ride.etaMin + ' min away</div>' +
+          '<div class="app-fare-detail">₹' + ride.fare.base + ' base · ₹' + ride.fare.perKm + '/km · ' + typeTag + '</div>' +
+        '</div>' +
+        '<div class="app-price-col">' +
+          '<div class="app-price' + (best ? ' best-price' : '') + '">₹' + ride.price + '</div>' +
+          '<div class="app-price-range">₹' + ride.range.low + '–₹' + ride.range.high + '</div>' +
+          '<div class="app-eta">' + ride.etaMin + ' min ETA</div>' +
+        '</div>' +
+        '<button class="open-app-btn">Book →</button>';
+
+      list.appendChild(card);
+    });
+
+    document.getElementById('results').classList.add('visible');
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 900);
+}
+</script>
+</body>
+</html>
